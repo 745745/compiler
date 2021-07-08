@@ -24,6 +24,5 @@ private:
 	list<Value*> globalVar;
 	list<Function*> funcList;
 	map<string, Value*> symbolTable;
-	map<string, ConstantValue> valueTable;
-	vector<int> regTable;
+	map<Value*, ConstantValue> valueTable;
 };
