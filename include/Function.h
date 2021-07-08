@@ -1,6 +1,7 @@
 #pragma once
 #include<list>
 #include<vector>
+#include"BasicBlock.h"
 #include"User.h"
 #include"Module.h"
 using std::list;

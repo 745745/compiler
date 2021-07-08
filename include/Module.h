@@ -5,6 +5,7 @@
 #include<string>
 #include"Value.h"
 #include"Function.h"
+#include"ConstantValue.h"
 
 using std::list;
 using std::map;
@@ -23,4 +24,6 @@ private:
 	list<Value*> globalVar;
 	list<Function*> funcList;
 	map<string, Value*> symbolTable;
+	map<string, ConstantValue> valueTable;
+	vector<int> regTable;
 };
