@@ -28,7 +28,7 @@ private:
 class ConstantArray : public ConstantValue
 {
 public:
-	ConstantArray(vector<int> val) :value(val) {type=typeArray};
+	ConstantArray(vector<int> val) :value(val) { type = typeArray; };
 
 private:
 	vector<int> value;

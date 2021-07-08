@@ -36,7 +36,7 @@
     <ClInclude Include="include\Value.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ConstantValue.h">
+    <ClInclude Include="include\ConstantValue.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

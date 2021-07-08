@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ConstantValue.h" />
     <ClInclude Include="include\BasicBlock.h" />
+    <ClInclude Include="include\ConstantValue.h" />
     <ClInclude Include="include\Function.h" />
     <ClInclude Include="include\Instruction.h" />
     <ClInclude Include="include\Module.h" />
