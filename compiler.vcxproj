@@ -24,9 +24,14 @@
     <ClInclude Include="include\Function.h" />
     <ClInclude Include="include\Instruction.h" />
     <ClInclude Include="include\Module.h" />
+    <ClInclude Include="include\node.h" />
+    <ClInclude Include="include\Pass.h" />
     <ClInclude Include="include\Type.h" />
     <ClInclude Include="include\User.h" />
     <ClInclude Include="include\Value.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Module.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

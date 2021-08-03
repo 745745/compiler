@@ -5,6 +5,7 @@
 #include<set>
 
 #include"Value.h"
+#include"Instruction.h"
 #include"Function.h"
 using std::map;
 using std::list;
@@ -12,8 +13,9 @@ using std::set;
 
 
 
-class BaseBlock :public Value
+class BaseBlock 
 {
+public:
 	enum BlockType 
 	{
 		Basic,
@@ -21,35 +23,45 @@ class BaseBlock :public Value
 		While,
 	};
 
+	void addInst(Instruction* inst);
+
 	BlockType blockType;
 	BaseBlock* parent;
 	Function* func;
-
+	std::vector<Instruction*> insrList;
+	std::vector<BaseBlock*> pre_bbs_;
+	std::vector<BaseBlock*> succ_bbs_;
 };
-
-
 
 
 
 class BasicBlock:public BaseBlock
 {
 public:
-	void addInst(Instruction* inst);
-
-
-
+	
 private:
 	std::map<Value*, std::set<Value*>> reach_assign_in_; // data flow
 	std::map<Value*, std::set<Value*>> reach_assign_out_;
-
-	std::list<BasicBlock*> pre_bbs_;
-	std::list<BasicBlock*> succ_bbs_;
 
 	std::set<BasicBlock*> doms_;        // dominance set
 	BasicBlock* idom_ = nullptr;         // immediate dominance
 	std::set<BasicBlock*> domFrontier_; // dominance frontier set
 	std::set<BasicBlock*> domTreeSuccBlocks_;
 
-	//后端应该只会用下面的指令列表，前面是做SSA用的
-	std::list<Instruction*> insrList;
+};
+
+//ifblock,最后都会转化成BasicBlock,作为中间类方便AST翻译
+class IfBlock :public BaseBlock
+{
+	Instruction* judge;
+	BaseBlock* trueBlock;
+	BaseBlock* falseBlock;
+};
+
+//whileblock同上
+class WhileBlock :public BaseBlock
+{
+public:
+	Instruction* judge;
+	vector<Instruction*> allInst;
 };

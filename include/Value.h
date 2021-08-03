@@ -15,6 +15,7 @@ class Value
 {
 public:
 	Value(Type* type) :type(type) {};
+	Value();
 	list<Use>& getUseList() { return useList; };
 	void addUse(Value* val, int useNo);
 	
@@ -26,6 +27,7 @@ public:
 	//just for debug
 	void debugPrint();
 private:
+	bool isConstant;//常量传播的时候用
 	Type* type;
 	list<Use> useList;
 };

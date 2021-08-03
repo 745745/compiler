@@ -3,7 +3,7 @@
 #include<vector>
 using std::vector;
 
-class ConstantValue
+class ConstantValue:public Value
 {
 public:
 	enum constantValueType
@@ -29,7 +29,6 @@ class ConstantArray : public ConstantValue
 {
 public:
 	ConstantArray(vector<int> val) :value(val) { type = typeArray; };
-
 private:
 	vector<int> value;
 };

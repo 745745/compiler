@@ -22,11 +22,7 @@ public:
 class IntType :public Type
 {
 public:
-	explicit IntType(int bits);
-	int getBits(); //get the bits of this IntType
-
-private:
-	int bits;
+	IntType();
 };
 
 class FunctionType :public Type
@@ -43,7 +39,7 @@ private:
 class ArrayType :public Type
 {
 public:
-	explicit ArrayType(int num,Type* elementType);
+	explicit ArrayType(int num);
 private:
 	int num;
 	Type* elementType;

@@ -10,11 +10,34 @@ using std::vector;
 class Function :public User
 {
 public:
-	void addBasicBlock(BasicBlock* p);
-	void removeBasicBlock(BasicBlock* p);
+	void addBasicBlock(BaseBlock* p);
+	void removeBasicBlock(BaseBlock* p);
+
+	Function(Type* type) :User(type) {};
+
+
+	int FunctionCompute();
+	static Function* makeFunction(Type* returnVal, vector<Type*>arg)
+	{
+		FunctionType* type = new FunctionType(returnVal, arg);
+		Function* p = new Function(type);
+		return p;
+	}
+
+	void setName(string name)
+	{
+		this->name = name;
+	}
+
+	void setParent(Module* p)
+	{
+		this->parent = p;
+	}
 
 
 private:
-	list<BasicBlock*> blocks;
+	int returnValue;
+	string name;
+	BaseBlock* entry;
 	Module* parent;
 };
