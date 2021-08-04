@@ -26,6 +26,10 @@ public:
 
 	//just for debug
 	void debugPrint();
+
+	bool isArray() { return type->tName == arrayType; };
+
+	bool isInt() { return type->tName == intType; };
 private:
 	bool isConstant;//常量传播的时候用
 	Type* type;

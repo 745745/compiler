@@ -12,7 +12,6 @@ using std::list;
 using std::set;
 
 
-
 class BaseBlock 
 {
 public:
@@ -26,11 +25,17 @@ public:
 	void addInst(Instruction* inst);
 
 	BlockType blockType;
-	BaseBlock* parent;
+	BaseBlock* parent; //依据parent来查找符号表
 	Function* func;
 	std::vector<Instruction*> insrList;
 	std::vector<BaseBlock*> pre_bbs_;
 	std::vector<BaseBlock*> succ_bbs_;
+
+
+	BaseBlock()
+	{
+		parent = nullptr;
+	}
 };
 
 

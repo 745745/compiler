@@ -2,8 +2,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include<stdlib.h>
-#include<stdio.h>
+
 class Node;
 class NDecl;
 class NExp;
@@ -68,7 +67,7 @@ public:
 public:
 	SymbolTable()
 	{
-		functionTable[0] = "Global";
+		functionTable[0] = "Global"; // 初始化符号表时自动初始化了一个全局的环境
 	}
 
 	void AddSymbol(NIdentifier& ident, int scope, NExpList lengths, NExp* initvalue, bool isconst, NVarDecl* parent);
@@ -85,6 +84,7 @@ public:
 	}
 	int GetSymbolValue(NIdentifier& ident, NExpList& array_def, int scope, Node* parent);
 	void SetValue(NIdentifier& name, NExpList& lengths, NExp& rhs, int scope);
+	Symbol* GetSymbol(NIdentifier& ident, int scope);
 };
 
 class Node
@@ -103,6 +103,7 @@ public:
 		this->parent = parent;
 		this->scope = scope;
 	}
+	// 及时为每一个点设置向上的指针和作用域
 
 public:
 	virtual void GenSymbolTable() {}
@@ -112,6 +113,7 @@ class NStmt : public Node
 {
 public:
 	virtual void SetValue() {}
+	// 目前仅实现了AssignStmt
 	virtual void ReFormatforArray() {}
 };
 
@@ -132,9 +134,9 @@ public:
 
 	virtual int ExpandInitList(IntList* initValue, int index, int length)
 	{
-
+		// 该虚函数用于对初始化列表进行加工，如果列表中的元素为列表时，将不再调用此函数，而是调用NInitlistExp中的expand函数
 		auto iterator = initValue->begin();
-		*(iterator + index) = this->GetValue();
+		*(iterator + index) = this->GetValue(); // 修改index位置的值
 		return ++index;
 	}
 };
@@ -150,8 +152,8 @@ public:
 		this->scope = 0;
 		for (auto NDecl : declarations)
 		{
-			NDecl->SetParentAndScope(this, this->scope);
-			NDecl->GenSymbolTable();
+			NDecl->SetParentAndScope(this, this->scope); // 为每一个FuncDecl或者VarDecl设置parent和scope
+			NDecl->GenSymbolTable();					 // 必须从上到下,同时要考虑赋值语句
 		}
 		for (auto NDecl : declarations)
 		{
@@ -196,7 +198,7 @@ public:
 	void Print();
 	int ExpandInitList(IntList* initValue, int index, int length)
 	{
-
+		// NInitListExp是一种特殊的结构，所以需要单独操作
 		int beforeindex = index;
 		int endindex = index;
 
@@ -233,9 +235,9 @@ public:
 	NExpList lengths;
 	NExp* initvalue;
 	IntList* finalInitValue;
-
+	// 存储数组的初始化列表
 	IntList* dimensionLength;
-
+	// 存储数组的各维度信息，可以利用下面的size获得数组的长度
 	int size;
 
 public:
@@ -280,7 +282,7 @@ public:
 	{
 		if (lengths.size() != 0)
 		{
-
+			// 对数组的各个维度进行调整
 			this->dimensionLength = new IntList();
 			this->size = 1;
 			for (auto NExp : lengths)
@@ -289,7 +291,7 @@ public:
 				dimensionLength->push_back(NExp->GetValue());
 			}
 
-
+			// 对数组的初始化列表进行调整;
 			if (this->init)
 			{
 				this->finalInitValue = new IntList(this->size, 0);
@@ -326,7 +328,7 @@ public:
 public:
 	NFuncDecl(const string& type, NIdentifier& function_name, NVarDeclList& parameters, NStmtList& statements) : type(type), function_name(function_name), parameters(parameters), statements(statements)
 	{
-
+		// 建立函数对象时就将函数表维护起来 下同
 		int index = this->symboltb.AddFunction(function_name.name);
 		for (auto param : parameters)
 		{
@@ -353,7 +355,7 @@ public:
 
 	void GenSymbolTable()
 	{
-
+		// 函数内部的变量在函数建立之后就完成了创建，但函数内部的赋值语句可能操作全局的变量，因此要在NCompUnit中完成创建
 		// for (auto stmt : statements)
 		// {
 		// 	stmt->SetValue();
@@ -473,6 +475,17 @@ public:
 		}
 		rhs.SetParentAndScope(this, scope);
 	}
+
+	IntList* GetDimensions()
+	{
+		IntList* dimensions = new IntList();
+		if (lengths.size() != 0)
+		{
+			// array
+			return this->symboltb.GetSymbol(this->name, this->scope)->parent->dimensionLength;
+		}
+		return dimensions;
+	}
 };
 
 class NNullStmt : public NStmt
@@ -537,7 +550,7 @@ public:
 public:
 	NBinaryExp(NExp& lhs, int op, NExp& rhs) : lhs(lhs), op(op), rhs(rhs) {}
 	void Print();
-	int GetValue();
+	int GetValue(); // 由于parser.hpp的限制，函数的实现只能放在其他文件中
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;

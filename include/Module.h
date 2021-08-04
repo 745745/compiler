@@ -30,6 +30,10 @@ public:
 
 	void addAddress(Value*, int);
 	BaseBlock* getFromStatment(NStmtList stmtList);
+
+	Value* findValue(string name, BaseBlock* p);
+	int getAddress(Value*);
+
 private:
 	vector<Value*> globalVar;
 	vector<Function*> funcList;

@@ -22,7 +22,7 @@ public:
 class IntType :public Type
 {
 public:
-	IntType();
+	IntType() { tName = intType; };
 };
 
 class FunctionType :public Type
@@ -39,7 +39,7 @@ private:
 class ArrayType :public Type
 {
 public:
-	explicit ArrayType(int num);
+	explicit ArrayType(int num) { tName = arrayType; };
 private:
 	int num;
 	Type* elementType;

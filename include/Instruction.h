@@ -145,7 +145,6 @@ public:
 	static CmpInst* createCMP(CmpOp op, Value* lhs, Value* rhs, BaseBlock* bb);
 };
 
-
 class BranchInst : public Instruction
 {
 public:

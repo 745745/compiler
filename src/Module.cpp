@@ -10,13 +10,13 @@ void Module::ASTTranslate(NCompUnit* cu)
 	vector<NDecl*> decl;
 	for (int i = 0; i < decl.size(); i++)
 	{
-		NVarDecl* p=dynamic_cast<NVarDecl*>(decl[i]);
+		NVarDecl* p = dynamic_cast<NVarDecl*>(decl[i]);
 		if (p == NULL)//Func decl
 		{
-			NFuncDecl *p= dynamic_cast<NFuncDecl*>(decl[i]);
+			NFuncDecl* p = dynamic_cast<NFuncDecl*>(decl[i]);
 			string name = p->function_name.name;
 			string type = p->type;
-			Type* t=new Type();
+			Type* t = new Type();
 			if (type == "int")
 			{
 				t->tName = intType;
@@ -30,29 +30,29 @@ void Module::ASTTranslate(NCompUnit* cu)
 			NVarDeclList para = p->parameters;
 			for (int i = 0; para.size(); i++)
 			{
-				 //这部分用于添加函数的参数，前端还没有最终版，先留着
+				//这部分用于添加函数的参数，前端还没有最终版，先留着
 
 			}
 
-			Function* func = Function::makeFunction(t,arg);
+			Function* func = Function::makeFunction(t, arg);
 			func->setName(name);
 			func->setParent(this);
 			NStmtList stmt = p->statements;
 			BaseBlock* block = getFromStatment(stmt);
-			func->addBasicBlock(block);			
+			func->addBasicBlock(block);
 			addFunction(func);
 		}
 
 		else //var decl
 		{
 			int len = p->lengths.size();
-			if ( len== 1) //int
+			if (len == 1) //int
 			{
 				Type* type = new Type();
 				type->tName == intType;
 				Value* val = new Value(type);
 
-				addSymbol(p->identifier.name, nullptr,val);
+				addSymbol(p->identifier.name, nullptr, val);
 				addGlobalVar(val);
 				if (p->init == true) //if init,add value to map
 				{
@@ -67,10 +67,10 @@ void Module::ASTTranslate(NCompUnit* cu)
 				Type* type = new ArrayType(p->lengths.size());
 				Value* val = new Value(type);
 
-				addSymbol(p->identifier.name, nullptr,val);
+				addSymbol(p->identifier.name, nullptr, val);
 				addGlobalVar(val);
 
-				if(p->init == true)
+				if (p->init == true)
 				{
 					vector<int> arrayValue;
 					for (int i = 0; i < len; i++)
@@ -87,10 +87,13 @@ void Module::ASTTranslate(NCompUnit* cu)
 }
 
 
+
+
 BaseBlock* Module::getFromStatment(NStmtList stmtList)
 {
 
 	BaseBlock* now = new BaseBlock();
+	now->parent = nullptr;
 	BaseBlock* entry = now;
 	BaseBlock* tail = now;
 	NStmt* stmt;
@@ -110,7 +113,7 @@ BaseBlock* Module::getFromStatment(NStmtList stmtList)
 			break;
 
 		case 2:
-			BaseBlock *p=getFromIf(dynamic_cast<NIfStmt*>(stmt));
+			BaseBlock * p = getFromIf(dynamic_cast<NIfStmt*>(stmt));
 			now->succ_bbs_.push_back(p);
 			now = p;
 			tail = p;
@@ -135,24 +138,81 @@ BaseBlock* Module::getFromStatment(NStmtList stmtList)
 					{
 						int val = (*dec->finalInitValue)[0];
 						ConstantInt* constInt = new ConstantInt(val);
-						
-						auto iter=this->addressTable.find(newVal);
+
+						auto iter = this->addressTable.find(newVal);
 						int address = iter->second;
-						Instruction* instr = StoreInst::createStore(constInt,address);
+						Instruction* instr = StoreInst::createStore(constInt, address - 4);
 					}
 				}
 
 				else //array
 				{
-
+					Type* p = new IntType();
+					Instruction* instr = AllocaInst::createAlloca(p, dec->size);
+					Value* newVal = new Value(p);
+					string name = dec->identifier.name;
+					addAddress(newVal, address);
+					address += 4 * dec->size;
+					now->addInst(instr);
+					if (dec->init)
+					{
+						for (int i = 0; i < dec->size; i++)
+						{
+							int val = (*dec->finalInitValue)[i];
+							ConstantInt* constInt = new ConstantInt(val);
+							auto iter = this->addressTable.find(newVal);
+							int address = iter->second;
+							Instruction* instr = StoreInst::createStore(constInt, address - 4 * (dec->size - i));
+						}
+					}
 				}
 			}
 		}
 
 		case 4:
+			BaseBlock * p = getFromWhile(dynamic_cast<NWhileStmt*>(stmt));
+			now->succ_bbs_.push_back(p);
+			now = p;
+			tail = p;
+			break;
 		case 5:
+			BaseBlock * p = getFromBlock(dynamic_cast<NBlockStmt*>(stmt));
+			now->succ_bbs_.push_back(p);
+			now = p;
+			tail = p;
+			break;
+
 		case 6:
+			//break 只会在while里面出现，在这里可以不管
+			break;
+
 		case 7:
+		{
+			NAssignStmt* assign = dynamic_cast<NAssignStmt*>(stmt);
+			string name = assign->name.name;
+			Value* var = findValue(name, now);
+			int address = getAddress(var);
+			int offset = ((NInteger*)(assign->lengths[0]))->value;
+			if (var->isArray())
+			{							
+				if (p==nullptr) //如果就是常数值，不需要计算
+				{					
+					NInteger* integer = dynamic_cast<NInteger*>(&(assign->rhs));
+					ConstantInt* constInt = new ConstantInt(integer->value);					
+					Instruction* instr = StoreInst::createStore(constInt, address,offset);
+				}
+				else
+				{
+
+
+				}
+			}
+
+			if (var->isInt())
+			{
+			}
+
+		}
 		case 8:
 		default:	break;
 		}
@@ -166,7 +226,7 @@ BaseBlock* Module::getFromStatment(NStmtList stmtList)
 
 BaseBlock* getFromBlock(NBlockStmt* block)
 {
-	
+
 
 
 }
