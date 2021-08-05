@@ -3,11 +3,11 @@
 #include <vector>
 
 using std::vector;
-int address = 0;
+
 
 void Module::ASTTranslate(NCompUnit* cu)
 {
-	vector<NDecl*> decl;
+	vector<NDecl*> decl=cu->declarations;
 	for (int i = 0; i < decl.size(); i++)
 	{
 		NVarDecl* p = dynamic_cast<NVarDecl*>(decl[i]);
@@ -27,36 +27,47 @@ void Module::ASTTranslate(NCompUnit* cu)
 			}
 
 			vector<Type*>arg;
+			vector<std::string> paraName;
 			NVarDeclList para = p->parameters;
-			for (int i = 0; para.size(); i++)
+			for (auto decl : para)
 			{
-				//这部分用于添加函数的参数，前端还没有最终版，先留着
-
+				paraName.push_back(decl->identifier.name);
+				if (decl->size == 0)
+				{
+					Type* paraType = new IntType();
+					arg.push_back(paraType);
+				}
+				else
+				{
+					Type* paraType = new ArrayType(decl->size);
+					arg.push_back(paraType);
+				}
 			}
-
-			Function* func = Function::makeFunction(t, arg);
+			Function* func = Function::makeFunction(t, arg,paraName);
 			func->setName(name);
 			func->setParent(this);
 			NStmtList stmt = p->statements;
-			BaseBlock* block = getFromStatment(stmt);
-			func->addBasicBlock(block);
+			func->getFromStatment(stmt);
+
 			addFunction(func);
 		}
 
 		else //var decl
 		{
 			int len = p->lengths.size();
-			if (len == 1) //int
+			string name = p->identifier.name;
+			if (len == 0) //int
 			{
 				Type* type = new Type();
 				type->tName == intType;
 				Value* val = new Value(type);
-
-				addSymbol(p->identifier.name, nullptr, val);
-				addGlobalVar(val);
+				
+				addAddress(val, address);
+				address += 4;
+				addGlobalVar(name,val);
 				if (p->init == true) //if init,add value to map
 				{
-					int intVal = (*(p->finalInitValue))[0];
+					int intVal = p->initvalue->GetValue();
 					ConstantInt* constInt = new ConstantInt(intVal);
 					addConstantValue(val, constInt);
 				}
@@ -67,13 +78,14 @@ void Module::ASTTranslate(NCompUnit* cu)
 				Type* type = new ArrayType(p->lengths.size());
 				Value* val = new Value(type);
 
-				addSymbol(p->identifier.name, nullptr, val);
-				addGlobalVar(val);
+				addAddress(val, address);
+				address += 4 * ((p->lengths[0])->GetValue());
+				addGlobalVar(name,val);
 
 				if (p->init == true)
 				{
 					vector<int> arrayValue;
-					for (int i = 0; i < len; i++)
+					for (int i = 0; i < p->finalInitValue->size(); i++)
 					{
 						int intVal = (*(p->finalInitValue))[i];
 						arrayValue.push_back(intVal);
@@ -86,300 +98,40 @@ void Module::ASTTranslate(NCompUnit* cu)
 	}
 }
 
-
-
-
-BaseBlock* Module::getFromStatment(NStmtList stmtList)
+void Module::debugPrint()
 {
-
-	BaseBlock* now = new BaseBlock();
-	now->parent = nullptr;
-	BaseBlock* entry = now;
-	BaseBlock* tail = now;
-	NStmt* stmt;
-	for (int i = 0; i < stmtList.size(); i++)
+	for (auto i : globalVar)
 	{
-		stmt = dynamic_cast<NStmt*>(stmtList[i]);
-		switch (judgeStmt(stmt))
+		Value* val = getGlobalValue(i.first);
+		if (val->isArray())
 		{
-		case 1:
-			NReturnStmt * ret = dynamic_cast<NReturnStmt*>(stmt);
-			Instruction* instr = getInstFromExp(ret->return_value);
-			now->insrList.push_back(instr);
-			now = new BaseBlock();
-			tail->succ_bbs_.push_back(now);
-			now->pre_bbs_.push_back(tail);
-			tail = now;
-			break;
-
-		case 2:
-			BaseBlock * p = getFromIf(dynamic_cast<NIfStmt*>(stmt));
-			now->succ_bbs_.push_back(p);
-			now = p;
-			tail = p;
-			break;
-
-		case 3:
-		{
-			NDeclList declList = dynamic_cast<NDeclStmt*>(stmt)->declarations;
-			for (auto decl : declList)
+			cout << "array: " << i.first;
+			if (val->isConstant)
 			{
-				auto dec = dynamic_cast<NVarDecl*>(decl);
-				if (dec->size == 0)
+				vector<int> value;
+				value = ((ConstantArray*)getConstantValue(val))->value;
+				for (int i = 0; i < value.size(); i++)
 				{
-					Type* p = new IntType();
-					Instruction* instr = AllocaInst::createAlloca(p);
-					Value* newVal = new Value(p);
-					string name = dec->identifier.name;
-					addAddress(newVal, address);
-					address += 4;
-					now->addInst(instr);
-					if (dec->init)
-					{
-						int val = (*dec->finalInitValue)[0];
-						ConstantInt* constInt = new ConstantInt(val);
-
-						auto iter = this->addressTable.find(newVal);
-						int address = iter->second;
-						Instruction* instr = StoreInst::createStore(constInt, address - 4);
-					}
-				}
-
-				else //array
-				{
-					Type* p = new IntType();
-					Instruction* instr = AllocaInst::createAlloca(p, dec->size);
-					Value* newVal = new Value(p);
-					string name = dec->identifier.name;
-					addAddress(newVal, address);
-					address += 4 * dec->size;
-					now->addInst(instr);
-					if (dec->init)
-					{
-						for (int i = 0; i < dec->size; i++)
-						{
-							int val = (*dec->finalInitValue)[i];
-							ConstantInt* constInt = new ConstantInt(val);
-							auto iter = this->addressTable.find(newVal);
-							int address = iter->second;
-							Instruction* instr = StoreInst::createStore(constInt, address - 4 * (dec->size - i));
-						}
-					}
+					cout << value[i] << " ";
 				}
 			}
+			cout << endl;
 		}
-
-		case 4:
-			BaseBlock * p = getFromWhile(dynamic_cast<NWhileStmt*>(stmt));
-			now->succ_bbs_.push_back(p);
-			now = p;
-			tail = p;
-			break;
-		case 5:
-			BaseBlock * p = getFromBlock(dynamic_cast<NBlockStmt*>(stmt));
-			now->succ_bbs_.push_back(p);
-			now = p;
-			tail = p;
-			break;
-
-		case 6:
-			//break 只会在while里面出现，在这里可以不管
-			break;
-
-		case 7:
+		else if (val->isInt())
 		{
-			NAssignStmt* assign = dynamic_cast<NAssignStmt*>(stmt);
-			string name = assign->name.name;
-			Value* var = findValue(name, now);
-			int address = getAddress(var);
-			int offset = ((NInteger*)(assign->lengths[0]))->value;
-			if (var->isArray())
-			{							
-				if (p==nullptr) //如果就是常数值，不需要计算
-				{					
-					NInteger* integer = dynamic_cast<NInteger*>(&(assign->rhs));
-					ConstantInt* constInt = new ConstantInt(integer->value);					
-					Instruction* instr = StoreInst::createStore(constInt, address,offset);
-				}
-				else
-				{
-
-
-				}
-			}
-
-			if (var->isInt())
+			cout << "int: " << i.first;
+			if (val->isConstant)
 			{
+				int value;
+				value = ((ConstantInt*)getConstantValue(val))->value;
+				cout << value;
 			}
-
+			cout << endl;
 		}
-		case 8:
-		default:	break;
-		}
-
-
 	}
 
-	return entry;
-}
-
-
-BaseBlock* getFromBlock(NBlockStmt* block)
-{
-
-
-
-}
-
-
-
-BaseBlock* getFromIf(NIfStmt* ifstmt)
-{}
-
-BaseBlock* getFromWhile(NWhileStmt* whileStmt)
-{}
-
-
-int judgeStmt(NStmt* p)
-{
-	if (isReturnStmt(p))
-		return 1;
-	if (isIfStmt(p))
-		return 2;
-	if (isDeclStmt(p))
-		return 3;
-	if (isWhileStmt(p))
-		return 4;
-	if (isBlockStmt(p))
-		return 5;
-	if (isBreakStmt(p))
-		return 6;
-	if (isAssignStmt(p))
-		return 7;
-	if (iscontinueStmt(p))
-		return 8;
-}
-
-Instruction* getInstFromExp(NExp* p)
-{
-
-
-}
-
-bool isReturnStmt(NStmt* p)
-{
-	if (dynamic_cast<NReturnStmt*>(p) == nullptr)
+	for (auto i : funcList)
 	{
-		return false;
+		i->debugPrint();
 	}
-	else return true;
-}
-
-bool isIfStmt(NStmt* p)
-{
-	if (dynamic_cast<NIfStmt*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isDeclStmt(NStmt* p)
-{
-	if (dynamic_cast<NDeclStmt*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isWhileStmt(NStmt* p)
-{
-	if (dynamic_cast<NWhileStmt*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isBlockStmt(NStmt* p)
-{
-	if (dynamic_cast<NBlockStmt*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isBreakStmt(NStmt* p)
-{
-	if (dynamic_cast<NBreakStmt*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isAssignStmt(NStmt* p)
-{
-	if (dynamic_cast<NAssignStmt*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool iscontinueStmt(NStmt* p)
-{
-	if (dynamic_cast<NContinueStmt*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-
-bool isIdentifierExp(NExp* p)
-{
-	if (dynamic_cast<NIdentifierExp*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isIdentifierExp(NExp* p)
-{
-	if (dynamic_cast<NIdentifierExp*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isBinaryExp(NExp* p)
-{
-	if (dynamic_cast<NBinaryExp*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isUnaryExp(NExp* p)
-{
-	if (dynamic_cast<NUnaryExp*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
-
-bool isCallExp(NExp* p)
-{
-	if (dynamic_cast<NCallExp*>(p) == nullptr)
-	{
-		return false;
-	}
-	else return true;
-}
+};

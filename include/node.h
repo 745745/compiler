@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <vector>
 #include <string>
@@ -54,7 +55,6 @@ public:
 
 public:
 	Symbol(NIdentifier& ident, int scope, NExpList lengths, NExp* initvalue, bool isconst, NVarDecl* parent) : ident(ident), scope(scope), lengths(lengths), value(initvalue), isconst(isconst), parent(parent) {}
-	void Print();
 	int GetValue(NExpList array_def);
 };
 
@@ -67,21 +67,14 @@ public:
 public:
 	SymbolTable()
 	{
-		functionTable[0] = "Global"; // 初始化符号表时自动初始化了一个全局的环境
+		functionTable[0] = "Global"; 
 	}
 
 	void AddSymbol(NIdentifier& ident, int scope, NExpList lengths, NExp* initvalue, bool isconst, NVarDecl* parent);
 
 	int AddFunction(string functionName);
 
-	void visit()
-	{
-		cout << "this is the symbol table:" << endl;
-		for (auto Symbol : valueTable)
-		{
-			Symbol.second->Print();
-		}
-	}
+
 	int GetSymbolValue(NIdentifier& ident, NExpList& array_def, int scope, Node* parent);
 	void SetValue(NIdentifier& name, NExpList& lengths, NExp& rhs, int scope);
 	Symbol* GetSymbol(NIdentifier& ident, int scope);
@@ -95,7 +88,6 @@ public:
 	int scope = 0;
 
 public:
-	virtual void Print() {}
 	virtual ~Node() {}
 
 	virtual void SetParentAndScope(Node* parent, int scope)
@@ -103,7 +95,6 @@ public:
 		this->parent = parent;
 		this->scope = scope;
 	}
-	// 及时为每一个点设置向上的指针和作用域
 
 public:
 	virtual void GenSymbolTable() {}
@@ -113,7 +104,6 @@ class NStmt : public Node
 {
 public:
 	virtual void SetValue() {}
-	// 目前仅实现了AssignStmt
 	virtual void ReFormatforArray() {}
 };
 
@@ -134,9 +124,8 @@ public:
 
 	virtual int ExpandInitList(IntList* initValue, int index, int length)
 	{
-		// 该虚函数用于对初始化列表进行加工，如果列表中的元素为列表时，将不再调用此函数，而是调用NInitlistExp中的expand函数
 		auto iterator = initValue->begin();
-		*(iterator + index) = this->GetValue(); // 修改index位置的值
+		*(iterator + index) = this->GetValue();
 		return ++index;
 	}
 };
@@ -152,15 +141,14 @@ public:
 		this->scope = 0;
 		for (auto NDecl : declarations)
 		{
-			NDecl->SetParentAndScope(this, this->scope); // 为每一个FuncDecl或者VarDecl设置parent和scope
-			NDecl->GenSymbolTable();					 // 必须从上到下,同时要考虑赋值语句
+			NDecl->SetParentAndScope(this, this->scope); 
+			NDecl->GenSymbolTable();					 
 		}
 		for (auto NDecl : declarations)
 		{
 			NDecl->ReFormatforArray();
 		}
 	}
-	void Print();
 };
 
 class NIdentifier : public NExp
@@ -170,7 +158,6 @@ public:
 
 public:
 	NIdentifier(const string& name) : name(name) {}
-	void Print();
 };
 
 class NInteger : public NExp
@@ -180,7 +167,6 @@ public:
 
 public:
 	NInteger(int value) : value(value) {}
-	void Print();
 	int GetValue()
 	{
 		return this->value;
@@ -195,10 +181,8 @@ public:
 public:
 	NInitListExp() {}
 	NInitListExp(NExpList& NInitList) : NInitList(NInitList) {}
-	void Print();
 	int ExpandInitList(IntList* initValue, int index, int length)
 	{
-		// NInitListExp是一种特殊的结构，所以需要单独操作
 		int beforeindex = index;
 		int endindex = index;
 
@@ -235,9 +219,9 @@ public:
 	NExpList lengths;
 	NExp* initvalue;
 	IntList* finalInitValue;
-	// 存储数组的初始化列表
+
 	IntList* dimensionLength;
-	// 存储数组的各维度信息，可以利用下面的size获得数组的长度
+
 	int size;
 
 public:
@@ -266,7 +250,6 @@ public:
 		isconst = true;
 	}
 
-	void Print();
 
 	void GenSymbolTable()
 	{
@@ -282,7 +265,7 @@ public:
 	{
 		if (lengths.size() != 0)
 		{
-			// 对数组的各个维度进行调整
+			
 			this->dimensionLength = new IntList();
 			this->size = 1;
 			for (auto NExp : lengths)
@@ -291,7 +274,7 @@ public:
 				dimensionLength->push_back(NExp->GetValue());
 			}
 
-			// 对数组的初始化列表进行调整;
+			
 			if (this->init)
 			{
 				this->finalInitValue = new IntList(this->size, 0);
@@ -328,7 +311,7 @@ public:
 public:
 	NFuncDecl(const string& type, NIdentifier& function_name, NVarDeclList& parameters, NStmtList& statements) : type(type), function_name(function_name), parameters(parameters), statements(statements)
 	{
-		// 建立函数对象时就将函数表维护起来 下同
+		
 		int index = this->symboltb.AddFunction(function_name.name);
 		for (auto param : parameters)
 		{
@@ -351,15 +334,10 @@ public:
 			statement->GenSymbolTable();
 		}
 	}
-	void Print();
 
 	void GenSymbolTable()
 	{
-		// 函数内部的变量在函数建立之后就完成了创建，但函数内部的赋值语句可能操作全局的变量，因此要在NCompUnit中完成创建
-		// for (auto stmt : statements)
-		// {
-		// 	stmt->SetValue();
-		// }
+
 	}
 
 	void ReFormatforArray()
@@ -379,7 +357,6 @@ public:
 public:
 	NReturnStmt(NExp* return_value) : return_value(return_value) {}
 	NReturnStmt() { return_value = NULL; }
-	void Print();
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;
@@ -408,7 +385,6 @@ public:
 			NDecl->GenSymbolTable();
 		}
 	}
-	void Print();
 	void ReFormatforArray()
 	{
 		for (auto NDecl : declarations)
@@ -436,7 +412,6 @@ public:
 
 public:
 	NBlockStmt(NStmtList& block) : block(block) {}
-	void Print();
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;
@@ -463,7 +438,6 @@ public:
 	{
 		this->symboltb.SetValue(name, lengths, rhs, scope);
 	}
-	void Print();
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;
@@ -491,7 +465,6 @@ public:
 class NNullStmt : public NStmt
 {
 public:
-	void Print();
 };
 
 class NExpStmt : public NStmt
@@ -501,7 +474,6 @@ public:
 
 public:
 	NExpStmt(NExp& expression) : expression(expression) {}
-	void Print();
 };
 
 class NIfStmt : public NStmt
@@ -514,7 +486,6 @@ public:
 public:
 	NIfStmt(NExp& condition, NStmt& true_statement) : condition(condition), true_statement(true_statement) { false_statement = NULL; }
 	NIfStmt(NExp& condition, NStmt& true_statement, NStmt* false_statement) : condition(condition), true_statement(true_statement), false_statement(false_statement) {}
-	void Print();
 };
 
 class NWhileStmt : public NStmt
@@ -525,19 +496,16 @@ public:
 
 public:
 	NWhileStmt(NExp& condition, NStmt& statement) : condition(condition), statement(statement) {}
-	void Print();
 };
 
 class NBreakStmt : public NStmt
 {
 public:
-	void Print();
 };
 
 class NContinueStmt : public NStmt
 {
 public:
-	void Print();
 };
 
 class NBinaryExp : public NExp
@@ -549,8 +517,7 @@ public:
 
 public:
 	NBinaryExp(NExp& lhs, int op, NExp& rhs) : lhs(lhs), op(op), rhs(rhs) {}
-	void Print();
-	int GetValue(); // 由于parser.hpp的限制，函数的实现只能放在其他文件中
+	int GetValue(); 
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;
@@ -568,7 +535,6 @@ public:
 
 public:
 	NUnaryExp(int op, NExp& rhs) : op(op), rhs(rhs) {}
-	void Print();
 	int GetValue();
 	void SetParentAndScope(Node* parent, int scope)
 	{
@@ -587,7 +553,6 @@ public:
 public:
 	NCallExp(NIdentifier& function_name) : function_name(function_name) {}
 	NCallExp(NIdentifier& function_name, NExpList parameters) : function_name(function_name), parameters(parameters) {}
-	void Print();
 };
 
 class NIdentifierExp : public NExp
@@ -598,7 +563,7 @@ public:
 
 public:
 	NIdentifierExp(NIdentifier& name, NExpList& array_def) : name(name), array_def(array_def) {}
-	void Print();
+
 
 	int GetValue()
 	{

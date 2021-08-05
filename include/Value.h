@@ -3,19 +3,15 @@
 #include"Type.h"
 
 using std::list;
-class Use
-{
-public:
-	Value *val;
-	int useNo;//like a=b+c.  for this use, b is 0, c is 1
-	Use(Value* val, int useNo) : val(val), useNo(useNo) {};
-};
 
+
+class Use;
 class Value
 {
 public:
-	Value(Type* type) :type(type) {};
-	Value();
+	Value(Type* type) :type(type) { isConstant = false; };
+	Value(typeName tName) { type = new Type(tName); };
+	Value() { isConstant = false; };
 	list<Use>& getUseList() { return useList; };
 	void addUse(Value* val, int useNo);
 	
@@ -30,13 +26,19 @@ public:
 	bool isArray() { return type->tName == arrayType; };
 
 	bool isInt() { return type->tName == intType; };
+	bool isConstant;
 private:
-	bool isConstant;//常量传播的时候用
+	
 	Type* type;
 	list<Use> useList;
 };
 
-void Value::debugPrint()
+class Use
 {
-	cout << type->tName << " " << this->isArray() << " " << this->isInt() << " " << this->isConstant ; 
-}
+public:
+	Value* val;
+	int useNo;//like a=b+c.  for this use, b is 0, c is 1
+	Use(Value* val, int useNo) : val(val), useNo(useNo) {};
+};
+
+

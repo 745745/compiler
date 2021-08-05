@@ -11,6 +11,8 @@ using std::map;
 using std::list;
 using std::set;
 
+class Function;
+class Instruction;
 
 class BaseBlock 
 {
@@ -22,15 +24,15 @@ public:
 		While,
 	};
 
-	void addInst(Instruction* inst);
+	void addInst(Instruction* inst) { insrList.push_back(inst); };
 
 	BlockType blockType;
-	BaseBlock* parent; //依据parent来查找符号表
+	BaseBlock* parent; 
 	Function* func;
 	std::vector<Instruction*> insrList;
 	std::vector<BaseBlock*> pre_bbs_;
 	std::vector<BaseBlock*> succ_bbs_;
-
+	void debugPrint() {};
 
 	BaseBlock()
 	{
@@ -55,7 +57,7 @@ private:
 
 };
 
-//ifblock,最后都会转化成BasicBlock,作为中间类方便AST翻译
+
 class IfBlock :public BaseBlock
 {
 	Instruction* judge;
@@ -63,7 +65,7 @@ class IfBlock :public BaseBlock
 	BaseBlock* falseBlock;
 };
 
-//whileblock同上
+
 class WhileBlock :public BaseBlock
 {
 public:

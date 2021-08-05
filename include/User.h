@@ -22,12 +22,17 @@ public:
 
 	void removeAllArg();
 
+	User(typeName tName) :Value(tName)
+	{
+		argNum = 0;
+	}
+
 	User(Type* type) :Value(type)
 	{
 		argNum = 0;
 	}
 
-private:
 	vector<Value*> args;
 	int argNum;
+
 };

@@ -1,16 +1,18 @@
 #pragma once
 
-
 #include"User.h"
 #include"Value.h"
 #include"BasicBlock.h"
 
+class BaseBlock;
+class BaseBlock;
+class Function;
 
 class Instruction :public User
 {
 public:
-	//先借用中科大的，后面有需要可以再改
 	enum OpID {
+		constant,
 		// High IR
 		Break,
 		Continue,
@@ -47,31 +49,41 @@ public:
 		GEP,     // GetElementPtr
 		ZExt,    // zero extend
 		MulAdd,  // a*b+c
-		// NEON SIMD
-		VV, // sum(vector .* vector)
-		BIC
+		//多条指令的结果求和
+		VectorAdd
 	};
 
-	Instruction(Type* type, OpID id, int argNum);
-	void setArg(int num, vector<Value*> arg);
-	void setParent(BaseBlock*);
-private:
+	Instruction(OpID id, int argNum):id(id),User(intType) {};
+	Instruction() :User(intType) {};
+	void setarg(int num, vector<Value*> arg) ;
+	void setParent(BaseBlock*); 
 	OpID id;
+	void debugPrint();
+private:
 	BaseBlock* parent;
 };
+
+class ConstInst :public Instruction
+{
+public:
+	ConstInst(Value* val);
+	static ConstInst* createConst(Value* val) { return new ConstInst(val); };
+};
+
 
 class UnaryInst :public Instruction
 {
 public:
 	UnaryInst(Type* type,Value* val,BaseBlock* block,int OpID);
-	static UnaryInst* createNeg(Value* val, BaseBlock* block);
-	static UnaryInst* createNot(Value* val, BaseBlock* block);
+	static UnaryInst* createNeg(Value* val, BaseBlock* block) { return new UnaryInst(new Type(intType), val, block, Neg); };
+	static UnaryInst* createNot(Value* val, BaseBlock* block){ return new UnaryInst(new Type(intType), val, block, Not); };
+	static UnaryInst* createUnary(Value* val, BaseBlock* block,OpID id) { return new UnaryInst(new Type(intType), val, block, id); };
 };
 
 class AllocaInst :public Instruction
 {
-	AllocaInst(Type* ty);
-	AllocaInst(Type* ty, int num);
+	AllocaInst(Type* ty) {};
+	AllocaInst(Type* ty, int num) {};
 
 public:
 	static AllocaInst* createAlloca(Type* ty) {return new  AllocaInst(ty); }
@@ -80,14 +92,16 @@ public:
 
 class StoreInst :public Instruction
 {
+	Value* offset;
+	int address;
 public:
-	StoreInst(Value* val, int address);
-	StoreInst(Value* val, int address, int offset);
+	StoreInst(Value* val, int address):address(address){};
+	StoreInst(Value* val, int address, Value* offset) :address(address),offset(offset) {}; //offset可能需要计算才能得到
 	static StoreInst* createStore(Value* val, int address)
 	{
 		return new StoreInst(val, address);	
 	}
-	static StoreInst* createStore(Value* val, int address, int offset)
+	static StoreInst* createStore(Value* val, int address, Value* offset)
 	{
 		return new StoreInst(val, address,offset);
 	};
@@ -95,15 +109,16 @@ public:
 
 class LoadInst :public Instruction
 {
-	LoadInst(Type* ty, int address);
-	LoadInst(Type* ty, int address, int offset);
-
+	LoadInst(Type* ty, int address):address(address) {  };
+	LoadInst(Type* ty, int address, Value* offset) :address(address), offset(offset) {};
+	Value* offset;
+	int address;
 public:
 	static LoadInst* createLoad(Type* ty, int address)
 	{
 		return new LoadInst(ty, address);
 	};
-	static LoadInst* createLoad(Type* ty, int address, int offset) {
+	static LoadInst* createLoad(Type* ty, int address, Value* offset) {
 		return new LoadInst(ty, address, offset);
 	}
 
@@ -115,17 +130,24 @@ public:
 class BinaryInst :public Instruction
 {
 public:
-	BinaryInst(Type* type, Value* val1, Value* val2, BaseBlock* block, int OpID);
-	BinaryInst(BaseBlock*);
-	void setVal(Value* val, int pos);
-	static BinaryInst* createAdd(Value* val1, Value* val2, BasicBlock* block);
-	static BinaryInst* createSub(Value* val1, Value* val2, BasicBlock* block);
-	static BinaryInst* createMul(Value* val1, Value* val2, BasicBlock* block);
-	static BinaryInst* createDiv(Value* val1, Value* val2, BasicBlock* block);
-	static BinaryInst* createRem(Value* val1, Value* val2, BasicBlock* block);
-	static BinaryInst* createAnd(Value* val1, Value* val2, BasicBlock* block);
-	static BinaryInst* createOr(Value* val1, Value* val2, BasicBlock* block);
-	static BinaryInst* createSub(Value* val1, Value* val2, BasicBlock* block);
+	BinaryInst(Value* val1, Value* val2, OpID OpID)
+	{
+		this->id = OpID;
+	}
+
+	BinaryInst(Value* val1, Value* val2, BaseBlock* block, OpID OpID)
+	{
+		this->id = OpID;
+	};
+	void setVal(Value* val, int pos) { setArg(val, pos); };
+	static BinaryInst* createAdd(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, Add); };
+	static BinaryInst* createSub(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, Sub); };
+	static BinaryInst* createMul(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, Mul); };
+	static BinaryInst* createDiv(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, Div); };
+	static BinaryInst* createRem(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, Rem); };
+	static BinaryInst* createAnd(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, And); };
+	static BinaryInst* createOr(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, Or); };
+	static BinaryInst* createBinary(Value* val1, Value* val2,OpID id) { return new BinaryInst(val1, val2, id); };
 };
 
 class CmpInst :public Instruction
@@ -166,10 +188,10 @@ public:
 class ReturnInst : public Instruction
 {
 public:
-	ReturnInst(Value* val, BaseBlock* bb);
-	ReturnInst(BaseBlock* bb);
-	static ReturnInst* createRet(Value* val, BaseBlock* bb);
-	static ReturnInst* createVoidRet(BaseBlock* bb);
+	ReturnInst(Value* val, BaseBlock* bb) {}
+	ReturnInst(BaseBlock* bb) {}
+	static ReturnInst* createRet(Value* val, BaseBlock* bb) { return new ReturnInst(val, bb); }
+	static ReturnInst* createVoidRet(BaseBlock* bb) { return new ReturnInst(bb); }
 };
 
 
@@ -177,12 +199,13 @@ public:
 class CallInst :public Instruction
 {
 public:
-	CallInst(Function* func, std::vector<Value*> args, BaseBlock* bb);
-
-	CallInst(Function* func, BaseBlock* bb);
+	CallInst(Function* func, std::vector<Value*> args, BaseBlock* bb) {}
 
 	static CallInst* createCall(Function* func, std::vector<Value*> args,
-		BaseBlock* bb);
+		BaseBlock* bb)
+	{
+		return new CallInst(func, args, bb);
+	}
 };
 
 class PhiInst :public Instruction
@@ -191,4 +214,13 @@ public:
 	PhiInst(OpID op, std::vector<Value*> vals, std::vector<BaseBlock*> val_bbs,
 		Type* ty, BaseBlock* bb);
 	Value* val;
+};
+
+
+class vectorInst :public Instruction
+{
+public:
+	vector<Instruction*> vec;
+	vectorInst(vector<Instruction*> vals, BaseBlock* bb):vec(vals) {};
+	static vectorInst* createVectorInst(vector<Instruction*> vec) { return new vectorInst(vec,nullptr); };
 };
