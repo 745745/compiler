@@ -24,8 +24,6 @@ public:
 		return p;
 	}
 
-	void debugPrint();
-
 	void setName(string name)
 	{
 		this->name = name;
@@ -43,8 +41,3 @@ private:
 	BaseBlock* entry;
 	Module* parent;
 };
-
-void Function::debugPrint()
-{
-	cout << name << " " << returnValue << " " << entry->blockType << " " << endl;
-}

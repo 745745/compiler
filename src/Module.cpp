@@ -1,6 +1,6 @@
 #include"../include/Module.h"
 #include"../include/node.h"
-#include <vector>
+#include<vector>
 
 using std::vector;
 int address = 0;
@@ -30,7 +30,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 			NVarDeclList para = p->parameters;
 			for (int i = 0; para.size(); i++)
 			{
-				//è¿™éƒ¨åˆ†ç”¨äºæ·»åŠ å‡½æ•°çš„å‚æ•°ï¼Œå‰ç«¯è¿˜æ²¡æœ‰æœ€ç»ˆç‰ˆï¼Œå…ˆç•™ç€
+				//Õâ²¿·ÖÓÃÓÚÌí¼Óº¯ÊıµÄ²ÎÊı£¬Ç°¶Ë»¹Ã»ÓĞ×îÖÕ°æ£¬ÏÈÁô×Å
 
 			}
 
@@ -183,7 +183,7 @@ BaseBlock* Module::getFromStatment(NStmtList stmtList)
 			break;
 
 		case 6:
-			//break åªä¼šåœ¨whileé‡Œé¢å‡ºç°ï¼Œåœ¨è¿™é‡Œå¯ä»¥ä¸ç®¡
+			//break Ö»»áÔÚwhileÀïÃæ³öÏÖ£¬ÔÚÕâÀï¿ÉÒÔ²»¹Ü
 			break;
 
 		case 7:
@@ -195,7 +195,7 @@ BaseBlock* Module::getFromStatment(NStmtList stmtList)
 			int offset = ((NInteger*)(assign->lengths[0]))->value;
 			if (var->isArray())
 			{							
-				if (p==nullptr) //å¦‚æœå°±æ˜¯å¸¸æ•°å€¼ï¼Œä¸éœ€è¦è®¡ç®—
+				if (p==nullptr) //Èç¹û¾ÍÊÇ³£ÊıÖµ£¬²»ĞèÒª¼ÆËã
 				{					
 					NInteger* integer = dynamic_cast<NInteger*>(&(assign->rhs));
 					ConstantInt* constInt = new ConstantInt(integer->value);					

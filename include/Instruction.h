@@ -9,7 +9,7 @@
 class Instruction :public User
 {
 public:
-	//å…ˆå€Ÿç”¨ä¸­ç§‘å¤§çš„ï¼Œåé¢æœ‰éœ€è¦å¯ä»¥å†æ”¹
+	//ÏÈ½èÓÃÖĞ¿Æ´óµÄ£¬ºóÃæÓĞĞèÒª¿ÉÒÔÔÙ¸Ä
 	enum OpID {
 		// High IR
 		Break,
