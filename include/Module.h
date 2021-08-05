@@ -20,7 +20,8 @@ class Module
 public:
 	void addFunction(Function* f) { funcList.push_back(f); };
 	void removeFunction(Function* f){};
-	Function* getFunction(string funcName) {};
+	Function* getFunction(string funcName);
+
 
 	Value* getGlobalValue(string name) 
 	{

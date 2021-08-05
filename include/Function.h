@@ -6,11 +6,14 @@
 #include"User.h"
 #include"Module.h"
 #include"node.h"
+#include"Instruction.h"
 using std::list;
 using std::vector;
 
 class BaseBlock;
 class Module;
+class NExp;
+class Instruction;
 
 class Function :public User
 {
@@ -27,9 +30,9 @@ public:
 
 	void getFromIf(NIfStmt* ifstmt);
 
-	static void addSymbol(string name, Value* val) { symbolTable.insert(make_pair(name, val)); };
+	static void addSymbol(string name, Value* val) { symbolTable.insert(make_pair(name, val)); }
 
-	Value* findValue(string name, BaseBlock* p) { return (symbolTable.find(name))->second; };
+	Value* findValue(string name, BaseBlock* p) { return (symbolTable.find(name))->second; }
 
 	Instruction* getInstFromExp(NExp* p);
 

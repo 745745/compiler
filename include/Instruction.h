@@ -74,7 +74,7 @@ public:
 class UnaryInst :public Instruction
 {
 public:
-	UnaryInst(Type* type,Value* val,BaseBlock* block,int OpID);
+	UnaryInst(Type* type, Value* val, BaseBlock* block, int OpID) {};
 	static UnaryInst* createNeg(Value* val, BaseBlock* block) { return new UnaryInst(new Type(intType), val, block, Neg); };
 	static UnaryInst* createNot(Value* val, BaseBlock* block){ return new UnaryInst(new Type(intType), val, block, Not); };
 	static UnaryInst* createUnary(Value* val, BaseBlock* block,OpID id) { return new UnaryInst(new Type(intType), val, block, id); };

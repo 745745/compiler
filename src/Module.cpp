@@ -135,3 +135,14 @@ void Module::debugPrint()
 		i->debugPrint();
 	}
 };
+
+
+Function* Module::getFunction(string funcName)
+{
+	for (auto i : funcList)
+	{
+		if (i->name == funcName)
+			return i;
+	}
+	return nullptr;
+}

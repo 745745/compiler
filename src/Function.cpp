@@ -114,7 +114,9 @@ bool isCallExp(NExp* p)
 }
 
 Instruction::OpID getOpId(int op)
-{}
+{
+	return Instruction::Add;
+}
 
 
 int judgeExp(NExp* exp)
