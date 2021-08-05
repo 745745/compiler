@@ -25,7 +25,7 @@ public:
 	void addInst(Instruction* inst);
 
 	BlockType blockType;
-	BaseBlock* parent; //依据parent来查找符号表
+	BaseBlock* parent; //渚濇嵁parent鏉ユ煡鎵剧鍙疯〃
 	Function* func;
 	std::vector<Instruction*> insrList;
 	std::vector<BaseBlock*> pre_bbs_;
@@ -55,7 +55,7 @@ private:
 
 };
 
-//ifblock,最后都会转化成BasicBlock,作为中间类方便AST翻译
+//ifblock,鏈�鍚庨兘浼氳浆鍖栨垚BasicBlock,浣滀负涓棿绫绘柟渚緼ST缈昏瘧
 class IfBlock :public BaseBlock
 {
 	Instruction* judge;
@@ -63,7 +63,7 @@ class IfBlock :public BaseBlock
 	BaseBlock* falseBlock;
 };
 
-//whileblock同上
+//whileblock鍚屼笂
 class WhileBlock :public BaseBlock
 {
 public:

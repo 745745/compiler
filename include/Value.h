@@ -31,7 +31,12 @@ public:
 
 	bool isInt() { return type->tName == intType; };
 private:
-	bool isConstant;//常量传播的时候用
+	bool isConstant;//甯搁噺浼犳挱鐨勬椂鍊欑敤
 	Type* type;
 	list<Use> useList;
 };
+
+void Value::debugPrint()
+{
+	cout << type->tName << " " << this->isArray() << " " << this->isInt() << " " << this->isConstant ; 
+}

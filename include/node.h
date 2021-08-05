@@ -67,7 +67,7 @@ public:
 public:
 	SymbolTable()
 	{
-		functionTable[0] = "Global"; // ³õÊ¼»¯·ûºÅ±íÊ±×Ô¶¯³õÊ¼»¯ÁËÒ»¸öÈ«¾ÖµÄ»·¾³
+		functionTable[0] = "Global"; // åˆå§‹åŒ–ç¬¦å·è¡¨æ—¶è‡ªåŠ¨åˆå§‹åŒ–äº†ä¸€ä¸ªå…¨å±€çš„ç¯å¢ƒ
 	}
 
 	void AddSymbol(NIdentifier& ident, int scope, NExpList lengths, NExp* initvalue, bool isconst, NVarDecl* parent);
@@ -103,7 +103,7 @@ public:
 		this->parent = parent;
 		this->scope = scope;
 	}
-	// ¼°Ê±ÎªÃ¿Ò»¸öµãÉèÖÃÏòÉÏµÄÖ¸ÕëºÍ×÷ÓÃÓò
+	// åŠæ—¶ä¸ºæ¯ä¸€ä¸ªç‚¹è®¾ç½®å‘ä¸Šçš„æŒ‡é’ˆå’Œä½œç”¨åŸŸ
 
 public:
 	virtual void GenSymbolTable() {}
@@ -113,7 +113,7 @@ class NStmt : public Node
 {
 public:
 	virtual void SetValue() {}
-	// Ä¿Ç°½öÊµÏÖÁËAssignStmt
+	// ç›®å‰ä»…å®ç°äº†AssignStmt
 	virtual void ReFormatforArray() {}
 };
 
@@ -134,9 +134,9 @@ public:
 
 	virtual int ExpandInitList(IntList* initValue, int index, int length)
 	{
-		// ¸ÃĞéº¯ÊıÓÃÓÚ¶Ô³õÊ¼»¯ÁĞ±í½øĞĞ¼Ó¹¤£¬Èç¹ûÁĞ±íÖĞµÄÔªËØÎªÁĞ±íÊ±£¬½«²»ÔÙµ÷ÓÃ´Ëº¯Êı£¬¶øÊÇµ÷ÓÃNInitlistExpÖĞµÄexpandº¯Êı
+		// è¯¥è™šå‡½æ•°ç”¨äºå¯¹åˆå§‹åŒ–åˆ—è¡¨è¿›è¡ŒåŠ å·¥ï¼Œå¦‚æœåˆ—è¡¨ä¸­çš„å…ƒç´ ä¸ºåˆ—è¡¨æ—¶ï¼Œå°†ä¸å†è°ƒç”¨æ­¤å‡½æ•°ï¼Œè€Œæ˜¯è°ƒç”¨NInitlistExpä¸­çš„expandå‡½æ•°
 		auto iterator = initValue->begin();
-		*(iterator + index) = this->GetValue(); // ĞŞ¸ÄindexÎ»ÖÃµÄÖµ
+		*(iterator + index) = this->GetValue(); // ä¿®æ”¹indexä½ç½®çš„å€¼
 		return ++index;
 	}
 };
@@ -152,8 +152,8 @@ public:
 		this->scope = 0;
 		for (auto NDecl : declarations)
 		{
-			NDecl->SetParentAndScope(this, this->scope); // ÎªÃ¿Ò»¸öFuncDecl»òÕßVarDeclÉèÖÃparentºÍscope
-			NDecl->GenSymbolTable();					 // ±ØĞë´ÓÉÏµ½ÏÂ,Í¬Ê±Òª¿¼ÂÇ¸³ÖµÓï¾ä
+			NDecl->SetParentAndScope(this, this->scope); // ä¸ºæ¯ä¸€ä¸ªFuncDeclæˆ–è€…VarDeclè®¾ç½®parentå’Œscope
+			NDecl->GenSymbolTable();					 // å¿…é¡»ä»ä¸Šåˆ°ä¸‹,åŒæ—¶è¦è€ƒè™‘èµ‹å€¼è¯­å¥
 		}
 		for (auto NDecl : declarations)
 		{
@@ -198,7 +198,7 @@ public:
 	void Print();
 	int ExpandInitList(IntList* initValue, int index, int length)
 	{
-		// NInitListExpÊÇÒ»ÖÖÌØÊâµÄ½á¹¹£¬ËùÒÔĞèÒªµ¥¶À²Ù×÷
+		// NInitListExpæ˜¯ä¸€ç§ç‰¹æ®Šçš„ç»“æ„ï¼Œæ‰€ä»¥éœ€è¦å•ç‹¬æ“ä½œ
 		int beforeindex = index;
 		int endindex = index;
 
@@ -235,9 +235,9 @@ public:
 	NExpList lengths;
 	NExp* initvalue;
 	IntList* finalInitValue;
-	// ´æ´¢Êı×éµÄ³õÊ¼»¯ÁĞ±í
+	// å­˜å‚¨æ•°ç»„çš„åˆå§‹åŒ–åˆ—è¡¨
 	IntList* dimensionLength;
-	// ´æ´¢Êı×éµÄ¸÷Î¬¶ÈĞÅÏ¢£¬¿ÉÒÔÀûÓÃÏÂÃæµÄsize»ñµÃÊı×éµÄ³¤¶È
+	// å­˜å‚¨æ•°ç»„çš„å„ç»´åº¦ä¿¡æ¯ï¼Œå¯ä»¥åˆ©ç”¨ä¸‹é¢çš„sizeè·å¾—æ•°ç»„çš„é•¿åº¦
 	int size;
 
 public:
@@ -282,7 +282,7 @@ public:
 	{
 		if (lengths.size() != 0)
 		{
-			// ¶ÔÊı×éµÄ¸÷¸öÎ¬¶È½øĞĞµ÷Õû
+			// å¯¹æ•°ç»„çš„å„ä¸ªç»´åº¦è¿›è¡Œè°ƒæ•´
 			this->dimensionLength = new IntList();
 			this->size = 1;
 			for (auto NExp : lengths)
@@ -291,7 +291,7 @@ public:
 				dimensionLength->push_back(NExp->GetValue());
 			}
 
-			// ¶ÔÊı×éµÄ³õÊ¼»¯ÁĞ±í½øĞĞµ÷Õû;
+			// å¯¹æ•°ç»„çš„åˆå§‹åŒ–åˆ—è¡¨è¿›è¡Œè°ƒæ•´;
 			if (this->init)
 			{
 				this->finalInitValue = new IntList(this->size, 0);
@@ -328,7 +328,7 @@ public:
 public:
 	NFuncDecl(const string& type, NIdentifier& function_name, NVarDeclList& parameters, NStmtList& statements) : type(type), function_name(function_name), parameters(parameters), statements(statements)
 	{
-		// ½¨Á¢º¯Êı¶ÔÏóÊ±¾Í½«º¯Êı±íÎ¬»¤ÆğÀ´ ÏÂÍ¬
+		// å»ºç«‹å‡½æ•°å¯¹è±¡æ—¶å°±å°†å‡½æ•°è¡¨ç»´æŠ¤èµ·æ¥ ä¸‹åŒ
 		int index = this->symboltb.AddFunction(function_name.name);
 		for (auto param : parameters)
 		{
@@ -355,7 +355,7 @@ public:
 
 	void GenSymbolTable()
 	{
-		// º¯ÊıÄÚ²¿µÄ±äÁ¿ÔÚº¯Êı½¨Á¢Ö®ºó¾ÍÍê³ÉÁË´´½¨£¬µ«º¯ÊıÄÚ²¿µÄ¸³ÖµÓï¾ä¿ÉÄÜ²Ù×÷È«¾ÖµÄ±äÁ¿£¬Òò´ËÒªÔÚNCompUnitÖĞÍê³É´´½¨
+		// å‡½æ•°å†…éƒ¨çš„å˜é‡åœ¨å‡½æ•°å»ºç«‹ä¹‹åå°±å®Œæˆäº†åˆ›å»ºï¼Œä½†å‡½æ•°å†…éƒ¨çš„èµ‹å€¼è¯­å¥å¯èƒ½æ“ä½œå…¨å±€çš„å˜é‡ï¼Œå› æ­¤è¦åœ¨NCompUnitä¸­å®Œæˆåˆ›å»º
 		// for (auto stmt : statements)
 		// {
 		// 	stmt->SetValue();
@@ -550,7 +550,7 @@ public:
 public:
 	NBinaryExp(NExp& lhs, int op, NExp& rhs) : lhs(lhs), op(op), rhs(rhs) {}
 	void Print();
-	int GetValue(); // ÓÉÓÚparser.hppµÄÏŞÖÆ£¬º¯ÊıµÄÊµÏÖÖ»ÄÜ·ÅÔÚÆäËûÎÄ¼şÖĞ
+	int GetValue(); // ç”±äºparser.hppçš„é™åˆ¶ï¼Œå‡½æ•°çš„å®ç°åªèƒ½æ”¾åœ¨å…¶ä»–æ–‡ä»¶ä¸­
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;
