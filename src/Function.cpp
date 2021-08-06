@@ -395,12 +395,14 @@ void Function::debugPrint()
 {
 	cout << "Function: " << name;
 	BaseBlock* p = entry;
+	cout << " entry = " << p->blockType ;
+	cout << " succ_bbs_= " << p->succ_bbs_.size() << " " << endl;
 	while (p->succ_bbs_.size()!=0)
 	{
-		p->debugPrint();
+		p-> debugPrint();
 		p = p->succ_bbs_[0];
 	}
+	p->debugPrint();
 	cout << endl;
-
 
 }

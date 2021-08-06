@@ -1,10 +1,12 @@
 #pragma once
 
 #include <iostream>
+#include <map>
 
 #include"User.h"
 #include"Value.h"
 #include"BasicBlock.h"
+#include"Module.h"
 
 using namespace std;
 
@@ -55,9 +57,50 @@ public:
 		//多条指令的结果求和
 		VectorAdd
 	};
+	const std::map<OpID, const char * > name = {
+		{constant,"constant"},
+		// High IR
+		{Break,"Break"},
+		{Continue, "Continue"},
+		// Terminator Instructions
+		{Ret, "Ret"},
+		{Br, "Br"},
+		{Jmp, "Jmp"},
+		// Standard unary operators
+		{Neg, "Neg"},
+		// Standard binary operators
+		{Add, "Add"},
+		{Sub, "Sub"},
+		{RSub, "RSub"}, // Reverse Subtract
+		{Mul, "Mul"},
+		{Div, "Div"},
+		{Rem, "Rem"},
+		{AddAddr, "AddAddr"}, // deprecated
+		// Logical operators
+		{And, "And"},
+		{Or, "Or"},
+		{Not, "Not"},
+		// Memory operators
+		{Alloca, "Alloca"},
+		{Load, "Load"},
+		{Store, "Store"},
+		// Shift operators
+		{Shl, "Shl"},  // <<
+		{AShr, "Ashr"}, // arithmetic >>
+		{LShr, "LShr"}, // logical >>
+		// Other operators
+		{Cmp, "Cmp"},
+		{PHI, "PHI"},
+		{Call, "Call"},
+		{GEP, "GEP"},     // GetElementPtr
+		{ZExt, "ZExt"},    // zero extend
+		{MulAdd, "MulAdd"},  // a*b+c
+		//多条指令的结果求和
+		{VectorAdd, "VectorAdd"}
+	};
 
 	Instruction(OpID id, int argNum):id(id),User(intType) {};
-	Instruction() :User(intType) {};
+	Instruction() :User(intType) {argNum = 0;};
 	void setarg(int num, vector<Value*> arg) ;
 	void setParent(BaseBlock*); 
 	OpID id;

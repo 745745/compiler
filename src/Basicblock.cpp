@@ -2,12 +2,14 @@
 
 void BaseBlock::debugPrint()
 {
-	cout << blockType;
+	cout << "    BlockType ";
+	cout << blockType << " ";
 	Instruction * inst;
+	cout << "InstructionListLength = "<<insrList.size() << endl;
 	for (auto inst : insrList)
 	{
-		inst->debugPrint();
-		cout << " ";
+		cout << "         InstructionCount ";
+		//inst->debugPrint(); //现在inst屁也没得测
+		cout << endl;
 	}
-	cout << endl;
 }

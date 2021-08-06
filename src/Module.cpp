@@ -3,7 +3,7 @@
 #include <vector>
 
 using std::vector;
-
+using namespace std;
 
 void Module::ASTTranslate(NCompUnit* cu)
 {
@@ -100,12 +100,24 @@ void Module::ASTTranslate(NCompUnit* cu)
 
 void Module::debugPrint()
 {
-	for (auto i : globalVar)
+	map<string, Value*>::iterator iter;
+	for ( iter = globalVar.begin(); iter != globalVar.end(); iter++)
 	{
-		Value* val = getGlobalValue(i.first);
+		cout << iter->first << endl;
+		Value* val = getGlobalValue(iter->first);
+		/*
+		cout << val->isArray() << " ";
+		cout << val->isInt() << " ";
+		cout << val->isConstant << endl;
+		*/
+		/*
+		cout << iter->second->isArray() << " ";
+		cout << iter->second->isInt() << " ";
+		cout << iter->second->isConstant << endl;
+		*/
 		if (val->isArray())
 		{
-			cout << "array: " << i.first;
+			cout << "array: " << iter->first;
 			if (val->isConstant)
 			{
 				vector<int> value;
@@ -119,7 +131,7 @@ void Module::debugPrint()
 		}
 		else if (val->isInt())
 		{
-			cout << "int: " << i.first;
+			cout << "int: " << iter->first;
 			if (val->isConstant)
 			{
 				int value;
@@ -129,7 +141,6 @@ void Module::debugPrint()
 			cout << endl;
 		}
 	}
-
 	for (auto i : funcList)
 	{
 		i->debugPrint();

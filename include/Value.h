@@ -21,7 +21,7 @@ public:
 	void removeUse(Value* val, int useNo);
 
 	//just for debug
-	void debugPrint();
+	virtual void debugPrint(){};
 
 	bool isArray() { return type->tName == arrayType; };
 
