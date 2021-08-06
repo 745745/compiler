@@ -1,9 +1,14 @@
 #include"../include/Function.h"
-
+#include<stack>
+using std::stack;
 
 map<string, Value*> Function::symbolTable;
 map<string, Value*> Function::recoverTable;
 SymbolTable Node::symboltb;
+
+stack<BaseBlock*> whileIn;
+stack<BaseBlock*> whileOut;
+
 
 bool isReturnStmt(NStmt* p)
 {
@@ -113,9 +118,51 @@ bool isCallExp(NExp* p)
 	else return true;
 }
 
+bool isInteger(NExp* p)
+{
+	if (dynamic_cast<NInteger*>(p) == nullptr)
+	{
+		return false;
+	}
+	else return true;
+}
+
+
 Instruction::OpID getOpId(int op)
 {
-	return Instruction::Add;
+	switch (op)
+	{
+	case 267:
+		return Instruction::EQ; break;
+	case 268:
+		return Instruction::NE; break;
+	case 269:
+		return Instruction::LE; break;
+	case 270:
+		return Instruction::GE; break;
+	case 271:
+		return Instruction::LT; break;
+	case 272:
+		return Instruction::GT; break;
+	case 273:
+		return Instruction::Not; break;
+	case 274:
+		return Instruction::And; break;
+	case 275:
+		return Instruction::Or; break;
+	case 276:
+		return Instruction::Add; break;
+	case 277:
+		return Instruction::Sub; break;
+	case 278:
+		return Instruction::Mul; break;
+	case 279:
+		return Instruction::Div; break;
+	case 280:
+		return Instruction::Mod; break;
+	case 281:
+		return Instruction::Div; break;
+	}
 }
 
 
@@ -129,6 +176,8 @@ int judgeExp(NExp* exp)
 		return 3;
 	if (isCallExp(exp))
 		return 4;
+	if (isInteger(exp))
+		return 5;
 }
 
 Instruction* Function::getInstFromExp(NExp* p)
@@ -141,13 +190,35 @@ Instruction* Function::getInstFromExp(NExp* p)
 		string name = ident->name.name;
 		if (ident->array_def.size() != 0)//array
 		{
+			IntList dim = *(ident->GetDimensions());
+			vector<int>mult;//记录数组各维度的乘积，方便将高维访问转化为低维访问
+			int init = 1;
+			mult.push_back(init);
+			for (int i = 1; i < dim.size(); i++)
+			{
+				init *= dim[i];
+				mult.push_back(init);
+			}
 
+			//数组定义为a[3][2][2],访问a[2][1][1],转化为a[3*2*2]访问a[2*4+1*2+1*1]
+			//2*4+1*2+1*1需要多条指令来计算 
+			vector<Instruction*> computeOffset;
+			int size = ident->array_def.size();
+			for (int i = 0; i < size; i++)
+			{
+				Value* val1 = new ConstantInt(mult[size-1-i]);
+				Instruction* val2 = getInstFromExp(ident->array_def[i]);
+				Instruction* instr = BinaryInst::createMul(val1, val2,last);
+				computeOffset.push_back(instr);
+			}
+			Instruction* instr = vectorInst::createVectorInst(computeOffset);
+			return instr;
 		}
 		else //int
 		{
-			Value* val = findValue(name, last);
+			Value* val = findValue(name);
 			int address = parent->getAddress(val);
-			Instruction* instr = LoadInst::createLoad(new Type(intType), address);
+			Instruction* instr = LoadInst::createLoad(address);
 			return instr;
 		}
 	}
@@ -156,7 +227,10 @@ Instruction* Function::getInstFromExp(NExp* p)
 		NBinaryExp* bi = dynamic_cast<NBinaryExp*>(p);
 		Instruction* left = getInstFromExp(&(bi->lhs));
 		Instruction* right = getInstFromExp(&(bi->rhs));
-		Instruction* instr = BinaryInst::createBinary(left, right, getOpId(bi->op));
+		Instruction* instr;
+		if (bi->op <= 272)
+			instr = CmpInst::createCMP(getOpId(bi->op),left,right,nullptr);
+		else instr = BinaryInst::createBinary(left, right, getOpId(bi->op));
 		return instr;
 	}
 	case 3:
@@ -179,22 +253,117 @@ Instruction* Function::getInstFromExp(NExp* p)
 		Instruction* instr = CallInst::createCall(func, para, nullptr);
 		return instr;
 	}
+
+	case 5:
+	{
+		NInteger* Int= dynamic_cast<NInteger*>(p);
+		ConstantInt* constint = new ConstantInt(Int->GetValue());
+		Instruction* instr = ConstInst::createConst(constint);
+		return instr;
+	}
 	}
 
+}
+
+Function::Function(Type* type):User(type)
+{
+	entry = last = new BaseBlock();
 }
 
 
 void Function::getFromIf(NIfStmt* ifstmt)
 {
+	BaseBlock* True=new BaseBlock();
+	BaseBlock* False;
+	BaseBlock* next = new BaseBlock();
+	last->succ_bbs_.push_back(True);
 	
+	if (ifstmt->false_statement == nullptr)
+		False = nullptr;
+	else
+	{
+		False = new BaseBlock();
+		last->succ_bbs_.push_back(False);
+	}
+	Instruction* condition= getInstFromExp(&(ifstmt->condition));
+	Instruction* branch = BranchInst::createCondBr(condition, True, False, nullptr);
+	last->addInst(branch);
+
+	//处理True分支
+	last = True;
+	last->succ_bbs_.push_back(next);
+	NStmt* trueStmt = &(ifstmt->true_statement);
+	NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
+	if (b!=nullptr)
+	{
+		getFromBlock(b);
+	}
+	else
+	{
+		//单条指令
+		NStmtList p;
+		p.push_back(trueStmt);
+		getFromStatment(p);
+	}
+
+	RecoverSymBol();
+
+	if (False != nullptr)
+	{
+		last = False;
+		last->succ_bbs_.push_back(next);
+		NStmt* trueStmt = ifstmt->false_statement;
+		NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
+		if (b != nullptr)
+		{
+			getFromBlock(b);
+		}
+		else
+		{
+			//单条指令
+			NStmtList p;
+			p.push_back(trueStmt);
+			getFromStatment(p);
+		}
+		RecoverSymBol();
+	}
+
+	last = next;
 }
 
 void Function::getFromWhile(NWhileStmt* whileStmt)
-{}
+{
+	BaseBlock* out = new BaseBlock();//while结束后下一个block
+	whileIn.push(last);
+	whileOut.push(out);
+	NBlockStmt* b = dynamic_cast<NBlockStmt*>(&whileStmt->statement);
+	if (b != nullptr)
+	{
+		getFromBlock(b);
+	}
+	else
+	{
+		//单条指令
+		NStmtList p;
+		p.push_back(&whileStmt->statement);
+		getFromStatment(p);
+	}
+
+	RecoverSymBol();
+	last = out;
+}
 
 
 void Function::getFromBlock(NBlockStmt* block)
-{}
+{
+	BaseBlock* p = new BaseBlock();
+	last->succ_bbs_.push_back(p);
+	last = p;
+	getFromStatment(block->block);
+	BaseBlock* next = new BaseBlock;
+	RecoverSymBol();
+	last = next;
+}
 
 
 
@@ -248,23 +417,26 @@ void Function::getFromStatment(NStmtList stmtList)
 				auto dec = dynamic_cast<NVarDecl*>(decl);
 				if (dec->size == 0)  //int
 				{
-					Type* p = new IntType();
-					Instruction* instr = AllocaInst::createAlloca(p);
-					Value* newVal = new Value(p);
+					Instruction* instr = AllocaInst::createAlloca(new Type(intType));
+					Value* newVal = new Value(intType);
 					string name = dec->identifier.name;
 					parent->addAddress(newVal, parent->address);
 					parent->address += 4;
 					now->addInst(instr);
 					addSymbol(name, newVal);
-					int val = 0;
+					parent->addName(name, newVal);
+					Value* v;
 					if (dec->init)
 					{
-						val = dec->initvalue->GetValue();
-						newVal->isConstant = true;
+						NExp* p = dec->initvalue;
+						v = getInstFromExp(p);
 					}
-					ConstantInt* constInt = new ConstantInt(val);
+					else
+					{
+						v = new ConstantInt(0);
+					}
 					int address = this->parent->getAddress(newVal);
-					instr = StoreInst::createStore(constInt, address - 4);		
+					instr = StoreInst::createStore(v, address - 4);		
 					now->addInst(instr);
 				}
 
@@ -278,6 +450,7 @@ void Function::getFromStatment(NStmtList stmtList)
 					parent->address += 4 * dec->size;
 					now->addInst(instr);
 					addSymbol(name, newVal);
+					parent->addName(name, newVal);
 					if (dec->init)
 					{
 						newVal->isConstant = true;
@@ -291,11 +464,15 @@ void Function::getFromStatment(NStmtList stmtList)
 					}
 				}
 			}
+			break;
 		}
 
 		case 4:
 		{
 			getFromWhile(dynamic_cast<NWhileStmt*>(stmt));
+			last = whileOut.top();
+			whileIn.pop();
+			whileOut.pop();
 			break;
 		}
 		case 5:
@@ -304,14 +481,19 @@ void Function::getFromStatment(NStmtList stmtList)
 			break;
 		}
 		case 6:
-			//break 只会在while里面出现，在这里可以不管
+			//跳出while，跳到WhileOut的栈顶地址
+		{
+			last->succ_bbs_.push_back(whileOut.top());
+			Instruction* p = BranchInst::createBr(whileOut.top(), last);
+			last->addInst(p);
+			last = new BaseBlock();
 			break;
-
+		}
 		case 7:
 		{
 			NAssignStmt* assign = dynamic_cast<NAssignStmt*>(stmt);
 			string name = assign->name.name;
-			Value* var = findValue(name, now);
+			Value* var = findValue(name);
 			int address = parent->getAddress(var);
 			if (var->isArray())
 			{
@@ -350,9 +532,15 @@ void Function::getFromStatment(NStmtList stmtList)
 				Instruction* store = StoreInst::createStore(rhs, address);
 				now->addInst(store);
 			}
-
+			break;
 		}
-		case 8: break;
+		case 8:			
+		{
+			last->succ_bbs_.push_back(whileIn.top());
+			Instruction* p = BranchInst::createBr(whileIn.top(), last);
+			last = new BaseBlock();
+			break;
+		}
 		default:	break;
 		}
 	}
@@ -388,6 +576,53 @@ Function* Function::makeFunction(Type* returnVal, vector<Type*>arg, vector<std::
 	}
 	return p;
 }
+
+void Function::RecoverSymBol()
+{
+	for (auto i : recoverTable)
+	{
+		auto iter= symbolTable.find(i.first);
+		if (iter != symbolTable.end())
+		{
+			symbolTable.erase(iter);
+			symbolTable.insert(make_pair(iter->first, iter->second));
+			recoverTable.erase(recoverTable.find(i.first));
+		}
+	}
+}
+
+
+void Function::addSymbol(string name, Value* val)
+{
+	auto iter = symbolTable.find(name);
+	if (iter != symbolTable.end())
+	{
+		recoverTable.insert(make_pair(iter->first,iter->second));
+		symbolTable.erase(iter);
+		symbolTable.insert(make_pair(name, val));
+	}
+	else
+	{
+		symbolTable.insert(make_pair(name, val));
+	}
+}
+
+Value* Function::findValue(string name)
+{
+	auto iter = symbolTable.find(name);
+	if (iter != symbolTable.end())
+	{
+		return iter->second;
+	}
+	else
+	{
+		auto global = parent->getGlobalValue(name);
+		if (global != nullptr)
+			return global;
+		else return nullptr;
+	}
+}
+
 
 
 

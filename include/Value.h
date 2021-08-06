@@ -28,7 +28,6 @@ public:
 	bool isInt() { return type->tName == intType; };
 	bool isConstant;
 private:
-	
 	Type* type;
 	list<Use> useList;
 };

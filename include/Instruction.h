@@ -3,10 +3,12 @@
 #include"User.h"
 #include"Value.h"
 #include"BasicBlock.h"
+#include"ConstantValue.h"
 
 class BaseBlock;
 class BaseBlock;
 class Function;
+class ConstantInt;
 
 class Instruction :public User
 {
@@ -26,6 +28,7 @@ public:
 		Add,
 		Sub,
 		RSub, // Reverse Subtract
+		Mod,
 		Mul,
 		Div,
 		Rem,
@@ -42,8 +45,15 @@ public:
 		Shl,  // <<
 		AShr, // arithmetic >>
 		LShr, // logical >>
+		
+		//Cmp
+		EQ, //==
+		NE, //!=
+		GT, //>
+		GE, //>=
+		LT, //<
+		LE,  //<=
 		// Other operators
-		Cmp,
 		PHI,
 		Call,
 		GEP,     // GetElementPtr
@@ -66,7 +76,7 @@ private:
 class ConstInst :public Instruction
 {
 public:
-	ConstInst(Value* val);
+	ConstInst(Value* val) { args.push_back(val); };
 	static ConstInst* createConst(Value* val) { return new ConstInst(val); };
 };
 
@@ -107,19 +117,29 @@ public:
 	};
 };
 
+//arg第一个是地址，第二个是偏移量
 class LoadInst :public Instruction
 {
-	LoadInst(Type* ty, int address):address(address) {  };
-	LoadInst(Type* ty, int address, Value* offset) :address(address), offset(offset) {};
-	Value* offset;
-	int address;
-public:
-	static LoadInst* createLoad(Type* ty, int address)
-	{
-		return new LoadInst(ty, address);
+	LoadInst(int address)
+	{ 
+		id = Load; 
+		args.push_back(new ConstantInt(address));
 	};
-	static LoadInst* createLoad(Type* ty, int address, Value* offset) {
-		return new LoadInst(ty, address, offset);
+	LoadInst(int address, Value* offset) 
+	{ 
+		id = Load; 
+		args.push_back(new ConstantInt(address));
+		args.push_back(offset);
+	};
+public:
+	static LoadInst* createLoad(int address)
+	{
+		return new LoadInst(address);
+	}
+	static LoadInst* createLoad(int address, Value* offset) 
+	{
+		return  new LoadInst(address,offset);
+
 	}
 
 };
@@ -133,11 +153,15 @@ public:
 	BinaryInst(Value* val1, Value* val2, OpID OpID)
 	{
 		this->id = OpID;
+		args.push_back(val1);
+		args.push_back(val2);
 	}
 
 	BinaryInst(Value* val1, Value* val2, BaseBlock* block, OpID OpID)
 	{
 		this->id = OpID;
+		args.push_back(val1);
+		args.push_back(val2);
 	};
 	void setVal(Value* val, int pos) { setArg(val, pos); };
 	static BinaryInst* createAdd(Value* val1, Value* val2, BaseBlock* block) { return new BinaryInst(val1, val2, block, Add); };
@@ -153,35 +177,45 @@ public:
 class CmpInst :public Instruction
 {
 public:
-	enum CmpOp
-	{
-		EQ, //==
-		NE, //!=
-		GT, //>
-		GE, //>=
-		LT, //<
-		LE  //<=
-	};
 
-	CmpInst(Type* type, Value* lhs, Value* rhs, BaseBlock* block, CmpOp cmp);
-	static CmpInst* createCMP(CmpOp op, Value* lhs, Value* rhs, BaseBlock* bb);
+	CmpInst(Type* type, Value* lhs, Value* rhs, BaseBlock* block, OpID cmp) 
+	{ 
+		id = cmp;
+		args.push_back(lhs);
+		args.push_back(rhs);
+	}
+	static CmpInst* createCMP(OpID op, Value* lhs, Value* rhs, BaseBlock* bb) { return new CmpInst(new Type(intType), lhs, rhs, bb, op); };
 };
 
 class BranchInst : public Instruction
 {
 public:
 	BranchInst(Value* cond, BaseBlock* if_true, BaseBlock* if_false,
-		BaseBlock* bb);
-	BranchInst(BaseBlock* if_true, BaseBlock* bb);
-	BranchInst(CmpInst::CmpOp op, Value* lhs, Value* rhs, BaseBlock* if_true,
-		BaseBlock* if_false, BaseBlock* bb);
+		BaseBlock* bb) 
+	{
+		id = Br;
+		args.push_back(cond);
+		args.push_back((Value*)if_true);
+	}
+	BranchInst(BaseBlock* if_true, BaseBlock* bb) 
+	{
+		id = Jmp;
+
+	}
+	BranchInst(CmpInst::OpID op, Value* lhs, Value* rhs, BaseBlock* if_true,
+		BaseBlock* if_false, BaseBlock* bb) {};
 
 	static BranchInst* createCondBr(Value* cond, BaseBlock* if_true,
-		BaseBlock* if_false, BaseBlock* bb);
-	static BranchInst* createBr(BaseBlock* if_true, BaseBlock* bb);
-	static BranchInst* createCmpBr(CmpInst::CmpOp op, Value* lhs, Value* rhs,
+		BaseBlock* if_false, BaseBlock* bb) {
+		return new BranchInst(cond, if_true, if_false, bb);
+	};
+	static BranchInst* createBr(BaseBlock* if_true, BaseBlock* bb) { return new BranchInst(if_true, bb); };
+	static BranchInst* createCmpBr(OpID op, Value* lhs, Value* rhs,
 		BaseBlock* if_true, BaseBlock* if_false,
-		BaseBlock* bb);
+		BaseBlock* bb)
+	{
+		return new BranchInst(op, lhs, rhs, if_true, if_false, bb);
+	}
 
 };
 

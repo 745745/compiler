@@ -49,8 +49,9 @@ public:
 	void addGlobalVar(string name, Value* val) { globalVar.insert(make_pair(name, val)); }
 	void addConstantValue(Value* val, ConstantValue* cVal) { valueTable.insert(make_pair(val, cVal)); };
 	void ASTTranslate(NCompUnit* cu);
-	string getName(Value*);
 
+	void addName(string name, Value* val);
+	string getName(Value*);
 
 	void addAddress(Value* p, int add) { addressTable.insert(make_pair(p, add)); };
 

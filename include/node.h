@@ -67,7 +67,7 @@ public:
 public:
 	SymbolTable()
 	{
-		functionTable[0] = "Global"; 
+		functionTable[0] = "Global";
 	}
 
 	void AddSymbol(NIdentifier& ident, int scope, NExpList lengths, NExp* initvalue, bool isconst, NVarDecl* parent);
@@ -141,8 +141,8 @@ public:
 		this->scope = 0;
 		for (auto NDecl : declarations)
 		{
-			NDecl->SetParentAndScope(this, this->scope); 
-			NDecl->GenSymbolTable();					 
+			NDecl->SetParentAndScope(this, this->scope);
+			NDecl->GenSymbolTable();
 		}
 		for (auto NDecl : declarations)
 		{
@@ -265,7 +265,7 @@ public:
 	{
 		if (lengths.size() != 0)
 		{
-			
+
 			this->dimensionLength = new IntList();
 			this->size = 1;
 			for (auto NExp : lengths)
@@ -274,7 +274,7 @@ public:
 				dimensionLength->push_back(NExp->GetValue());
 			}
 
-			
+
 			if (this->init)
 			{
 				this->finalInitValue = new IntList(this->size, 0);
@@ -311,7 +311,7 @@ public:
 public:
 	NFuncDecl(const string& type, NIdentifier& function_name, NVarDeclList& parameters, NStmtList& statements) : type(type), function_name(function_name), parameters(parameters), statements(statements)
 	{
-		
+
 		int index = this->symboltb.AddFunction(function_name.name);
 		for (auto param : parameters)
 		{
@@ -517,7 +517,7 @@ public:
 
 public:
 	NBinaryExp(NExp& lhs, int op, NExp& rhs) : lhs(lhs), op(op), rhs(rhs) {}
-	int GetValue(); 
+	int GetValue();
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;
@@ -574,5 +574,16 @@ public:
 	{
 		this->parent = parent;
 		this->scope = scope;
+	}
+
+	IntList* GetDimensions()
+	{
+		IntList* dimensions = new IntList();
+		if (array_def.size() != 0)
+		{
+			// array
+			return this->symboltb.GetSymbol(this->name, this->scope)->parent->dimensionLength;
+		}
+		return dimensions;
 	}
 };

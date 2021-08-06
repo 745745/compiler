@@ -30,17 +30,18 @@ public:
 
 	void getFromIf(NIfStmt* ifstmt);
 
-	static void addSymbol(string name, Value* val) { symbolTable.insert(make_pair(name, val)); }
+	static void addSymbol(string name, Value* val);
 
-	Value* findValue(string name, BaseBlock* p) { return (symbolTable.find(name))->second; }
+	Value* findValue(string name);
 
 	Instruction* getInstFromExp(NExp* p);
 
-	Function(Type* type) :User(type) {};
+	Function(Type* type);
 
 	static Function* makeFunction(Type* returnVal, vector<Type*>arg, vector<std::string> paraName);
 
-
+	//block结束，将recoverTable中的符号重新写回symbolTable中
+	void RecoverSymBol();
 
 	void debugPrint();
 

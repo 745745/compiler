@@ -14,7 +14,7 @@ using std::set;
 class Function;
 class Instruction;
 
-class BaseBlock 
+class BaseBlock :public Value
 {
 public:
 	enum BlockType 
@@ -36,6 +36,7 @@ public:
 
 	BaseBlock()
 	{
+		
 		parent = nullptr;
 	}
 };

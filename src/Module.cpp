@@ -46,6 +46,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 			Function* func = Function::makeFunction(t, arg,paraName);
 			func->setName(name);
 			func->setParent(this);
+			
 			NStmtList stmt = p->statements;
 			func->getFromStatment(stmt);
 
@@ -58,9 +59,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 			string name = p->identifier.name;
 			if (len == 0) //int
 			{
-				Type* type = new Type();
-				type->tName == intType;
-				Value* val = new Value(type);
+				Value* val = new Value(intType);
 				
 				addAddress(val, address);
 				address += 4;
@@ -70,6 +69,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 					int intVal = p->initvalue->GetValue();
 					ConstantInt* constInt = new ConstantInt(intVal);
 					addConstantValue(val, constInt);
+					val->isConstant = true;
 				}
 			}
 
@@ -92,10 +92,26 @@ void Module::ASTTranslate(NCompUnit* cu)
 					}
 					ConstantArray* array = new ConstantArray(arrayValue);
 					addConstantValue(val, array);
+					val->isConstant = true;
 				}
 			}
 		}
 	}
+}
+
+void Module::addName(string name, Value* val)
+{
+	nameTable.insert(make_pair(val, name));
+}
+
+string Module::getName(Value* val)
+{
+	auto iter = nameTable.find(val);
+	if (iter != nameTable.end())
+	{
+		return iter->second;
+	}
+	return string();
 }
 
 void Module::debugPrint()
@@ -105,7 +121,7 @@ void Module::debugPrint()
 		Value* val = getGlobalValue(i.first);
 		if (val->isArray())
 		{
-			cout << "array: " << i.first;
+			cout << "array: " << i.first<<" ";
 			if (val->isConstant)
 			{
 				vector<int> value;
@@ -124,7 +140,7 @@ void Module::debugPrint()
 			{
 				int value;
 				value = ((ConstantInt*)getConstantValue(val))->value;
-				cout << value;
+				cout << "="<<value;
 			}
 			cout << endl;
 		}
