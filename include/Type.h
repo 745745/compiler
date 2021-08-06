@@ -8,6 +8,8 @@ enum typeName
 	intType,
 	functionType,
 	arrayType,
+	ptrType,
+	instrType
 };
 
 class Type
@@ -28,7 +30,7 @@ public:
 class FunctionType :public Type
 {
 public:
-	explicit FunctionType(Type* returnType, vector<Type*> args):Type(functionType) {};
+	explicit FunctionType(Type* returnType, vector<Type*> args) :Type(functionType) { this->returnType = returnType; this->args = args; };
 	Type* returnType;
 	vector<Type*> args;
 };
@@ -41,3 +43,10 @@ public:
 	int num;
 };
 
+class ptrType
+{
+
+};
+
+class instrType
+{};

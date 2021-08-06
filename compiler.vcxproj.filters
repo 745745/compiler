@@ -71,5 +71,8 @@
     <ClCompile Include="src\Instrucion.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\BasicBlock.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

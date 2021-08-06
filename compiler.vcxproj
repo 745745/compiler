@@ -32,6 +32,7 @@
     <ClInclude Include="src\parser.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\BasicBlock.cpp" />
     <ClCompile Include="src\Function.cpp" />
     <ClCompile Include="src\Instrucion.cpp" />
     <ClCompile Include="src\main.cpp" />

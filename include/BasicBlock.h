@@ -32,11 +32,10 @@ public:
 	std::vector<Instruction*> insrList;
 	std::vector<BaseBlock*> pre_bbs_;
 	std::vector<BaseBlock*> succ_bbs_;
-	void debugPrint() {};
+	void debugPrint();
 
-	BaseBlock()
+	BaseBlock():Value(voidType)
 	{
-		
 		parent = nullptr;
 	}
 };

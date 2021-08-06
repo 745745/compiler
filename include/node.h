@@ -32,7 +32,7 @@ struct Index
 		{
 			return true;
 		}
-		else if (name < x.name)
+		else if (scope==x.scope && name < x.name)
 		{
 			return true;
 		}
@@ -219,30 +219,41 @@ public:
 	NExpList lengths;
 	NExp* initvalue;
 	IntList* finalInitValue;
-
+	// 存储数组的初始化列表
 	IntList* dimensionLength;
-
+	// 存储数组的各维度信息，可以利用下面的size获得数组的长度
 	int size;
+	bool is_array = false;
 
 public:
 	NVarDecl(NIdentifier& identifier, NExpList& lengths, NExp* initvalue) : identifier(identifier), lengths(lengths), initvalue(initvalue)
 	{
 		init = true;
+		if (lengths.size() != 0)
+		{
+			this->is_array = true;
+		}
 	}
 	NVarDecl(NIdentifier& identifier, NExpList& lengths) : identifier(identifier), lengths(lengths)
 	{
 		init = false;
 		initvalue = NULL;
+		if (lengths.size() != 0)
+		{
+			this->is_array = true;
+		}
 	}
 
 	NVarDecl(const string& type, NIdentifier& identifier) : type(type), identifier(identifier)
 	{
 		init = false;
+		this->is_array = false;
 	}
 	NVarDecl(const string& type, NIdentifier& identifier, NExpList& lengths) : type(type), identifier(identifier), lengths(lengths)
 	{
 		init = false;
 		initvalue = NULL;
+		this->is_array = true;
 	}
 
 	void setTypeforConst()
@@ -250,6 +261,7 @@ public:
 		isconst = true;
 	}
 
+	void Print();
 
 	void GenSymbolTable()
 	{
@@ -265,7 +277,7 @@ public:
 	{
 		if (lengths.size() != 0)
 		{
-
+			// 对数组的各个维度进行调整
 			this->dimensionLength = new IntList();
 			this->size = 1;
 			for (auto NExp : lengths)
@@ -274,7 +286,7 @@ public:
 				dimensionLength->push_back(NExp->GetValue());
 			}
 
-
+			// 对数组的初始化列表进行调整;
 			if (this->init)
 			{
 				this->finalInitValue = new IntList(this->size, 0);
@@ -299,6 +311,7 @@ public:
 		}
 	}
 };
+
 
 class NFuncDecl : public NDecl
 {

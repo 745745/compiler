@@ -10,7 +10,7 @@ class Value
 {
 public:
 	Value(Type* type) :type(type) { isConstant = false; };
-	Value(typeName tName) { type = new Type(tName); };
+	Value(typeName tName) { type = new Type(tName); isConstant = false;	};
 	Value() { isConstant = false; };
 	list<Use>& getUseList() { return useList; };
 	void addUse(Value* val, int useNo);
@@ -21,14 +21,16 @@ public:
 	void removeUse(Value* val, int useNo);
 
 	//just for debug
-	void debugPrint();
+	virtual void debugPrint() {};
 
 	bool isArray() { return type->tName == arrayType; };
 
 	bool isInt() { return type->tName == intType; };
+
+	bool isInstr() { return type->tName == instrType; }
 	bool isConstant;
-private:
 	Type* type;
+private:
 	list<Use> useList;
 };
 

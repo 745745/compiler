@@ -2,8 +2,7 @@
 #include<stack>
 using std::stack;
 
-map<string, Value*> Function::symbolTable;
-map<string, Value*> Function::recoverTable;
+
 SymbolTable Node::symboltb;
 
 stack<BaseBlock*> whileIn;
@@ -259,6 +258,8 @@ Instruction* Function::getInstFromExp(NExp* p)
 		NInteger* Int= dynamic_cast<NInteger*>(p);
 		ConstantInt* constint = new ConstantInt(Int->GetValue());
 		Instruction* instr = ConstInst::createConst(constint);
+		instr->isConstant = true;
+		instr->isconst = true;
 		return instr;
 	}
 	}
@@ -273,30 +274,26 @@ Function::Function(Type* type):User(type)
 
 void Function::getFromIf(NIfStmt* ifstmt)
 {
-	BaseBlock* True=new BaseBlock();
-	BaseBlock* False;
+	Instruction* instr = getInstFromExp(&ifstmt->condition);	
+	BaseBlock* now = last;
 	BaseBlock* next = new BaseBlock();
-	last->succ_bbs_.push_back(True);
-	
-	if (ifstmt->false_statement == nullptr)
-		False = nullptr;
-	else
-	{
-		False = new BaseBlock();
-		last->succ_bbs_.push_back(False);
-	}
-	Instruction* condition= getInstFromExp(&(ifstmt->condition));
-	Instruction* branch = BranchInst::createCondBr(condition, True, False, nullptr);
-	last->addInst(branch);
 
+	BaseBlock* F = new BaseBlock();
+	bool False = (ifstmt->false_statement != nullptr);
+	if (False) //False存在
+	{
+		last->succ_bbs_.push_back(F);
+		F->succ_bbs_.push_back(next);
+		F->pre_bbs_.push_back(last);
+	}
 	//处理True分支
-	last = True;
-	last->succ_bbs_.push_back(next);
 	NStmt* trueStmt = &(ifstmt->true_statement);
 	NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
 	if (b!=nullptr)
 	{
 		getFromBlock(b);
+		last = last->pre_bbs_[0];
+		last->succ_bbs_.push_back(next);
 	}
 	else
 	{
@@ -308,15 +305,16 @@ void Function::getFromIf(NIfStmt* ifstmt)
 
 	RecoverSymBol();
 
-	if (False != nullptr)
+	if (False)
 	{
-		last = False;
-		last->succ_bbs_.push_back(next);
+		last = F;
 		NStmt* trueStmt = ifstmt->false_statement;
 		NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
 		if (b != nullptr)
 		{
 			getFromBlock(b);
+			last = last->pre_bbs_[0];
+			last->succ_bbs_.push_back(next);
 		}
 		else
 		{
@@ -326,8 +324,27 @@ void Function::getFromIf(NIfStmt* ifstmt)
 			getFromStatment(p);
 		}
 		RecoverSymBol();
+		
+	}
+	last = last->pre_bbs_[0];
+	if (False)
+	{
+		next->pre_bbs_.push_back(last->succ_bbs_[0]);
+		next->pre_bbs_.push_back(last->succ_bbs_[1]);
+	}
+	else
+	{
+		next->pre_bbs_.push_back(last->succ_bbs_[0]);
+		next->pre_bbs_.push_back(last);
 	}
 
+	Instruction* ifBranch;
+	if (False)
+	{
+		ifBranch = BranchInst::createCondBr(instr, last->succ_bbs_[0], last->succ_bbs_[1], nullptr);
+	}
+	else ifBranch = BranchInst::createCondBr(instr, last->succ_bbs_[0], nullptr, nullptr);
+	last->addInst(ifBranch);
 	last = next;
 }
 
@@ -340,6 +357,8 @@ void Function::getFromWhile(NWhileStmt* whileStmt)
 	if (b != nullptr)
 	{
 		getFromBlock(b);
+		last = last->pre_bbs_[0];
+		last->succ_bbs_.push_back(out);
 	}
 	else
 	{
@@ -356,13 +375,25 @@ void Function::getFromWhile(NWhileStmt* whileStmt)
 
 void Function::getFromBlock(NBlockStmt* block)
 {
-	BaseBlock* p = new BaseBlock();
-	last->succ_bbs_.push_back(p);
-	last = p;
+	BaseBlock* p;
+	if (last->insrList.size() == 0)
+		p = last;
+	else 
+	{
+		p = new BaseBlock();
+		p->pre_bbs_.push_back(last);
+		last->succ_bbs_.push_back(p);
+		last = p;
+	}
 	getFromStatment(block->block);
-	BaseBlock* next = new BaseBlock;
+	BaseBlock* next;
+	if (last->insrList.size() == 0)
+		next = last;
+	else next = new BaseBlock();
+	BaseBlock* now = last;
 	RecoverSymBol();
 	last = next;
+	next->pre_bbs_.push_back(now);
 }
 
 
@@ -401,7 +432,7 @@ void Function::getFromStatment(NStmtList stmtList)
 		{
 			NReturnStmt* ret = dynamic_cast<NReturnStmt*>(stmt);
 			Instruction* instr = getInstFromExp(ret->return_value);
-			now->insrList.push_back(instr);
+			last->insrList.push_back(instr);
 			break;
 		}
 		case 2:
@@ -415,16 +446,16 @@ void Function::getFromStatment(NStmtList stmtList)
 			for (auto decl : declList)
 			{
 				auto dec = dynamic_cast<NVarDecl*>(decl);
-				if (dec->size == 0)  //int
+				if (dec->is_array==false)  //int
 				{
 					Instruction* instr = AllocaInst::createAlloca(new Type(intType));
 					Value* newVal = new Value(intType);
 					string name = dec->identifier.name;
 					parent->addAddress(newVal, parent->address);
-					parent->address += 4;
-					now->addInst(instr);
+					parent->address += 1;
+					last->addInst(instr);
 					addSymbol(name, newVal);
-					parent->addName(name, newVal);
+					parent->addName(newVal, name);
 					Value* v;
 					if (dec->init)
 					{
@@ -436,8 +467,8 @@ void Function::getFromStatment(NStmtList stmtList)
 						v = new ConstantInt(0);
 					}
 					int address = this->parent->getAddress(newVal);
-					instr = StoreInst::createStore(v, address - 4);		
-					now->addInst(instr);
+					instr = StoreInst::createStore(v, address);		
+					last->addInst(instr);
 				}
 
 				else //array
@@ -447,10 +478,10 @@ void Function::getFromStatment(NStmtList stmtList)
 					Value* newVal = new Value(p);
 					string name = dec->identifier.name;
 					parent->addAddress(newVal, parent->address);
-					parent->address += 4 * dec->size;
-					now->addInst(instr);
+					parent->address += dec->size;
+					last->addInst(instr);
 					addSymbol(name, newVal);
-					parent->addName(name, newVal);
+					parent->addName(newVal, name);
 					if (dec->init)
 					{
 						newVal->isConstant = true;
@@ -459,7 +490,7 @@ void Function::getFromStatment(NStmtList stmtList)
 							int val = (*dec->finalInitValue)[i];
 							ConstantInt* constInt = new ConstantInt(val);
 							int address = this->parent->getAddress(newVal);
-							Instruction* instr = StoreInst::createStore(constInt, address - 4 * (dec->size - i));
+							Instruction* instr = StoreInst::createStore(constInt, address+i);
 						}
 					}
 				}
@@ -495,14 +526,21 @@ void Function::getFromStatment(NStmtList stmtList)
 			string name = assign->name.name;
 			Value* var = findValue(name);
 			int address = parent->getAddress(var);
-			if (var->isArray())
+			if (var->isInt())
+			{
+				Instruction* rhs = getInstFromExp(&assign->rhs);
+				Instruction* store = StoreInst::createStore(rhs, address);
+				last->addInst(store);
+			}
+			
+			else //数组及指针
 			{
 				IntList dim = (*assign->GetDimensions());
 				vector<int>mult;//记录数组各维度的乘积，方便将高维访问转化为低维访问
 				int init = 1;
 				mult.push_back(init);
 				Instruction* rhs = getInstFromExp(&assign->rhs);
-				now->addInst(rhs);
+				last->addInst(rhs);
 				for (int i=1;i<dim.size();i++)
 				{
 					init *= dim[i];
@@ -523,16 +561,10 @@ void Function::getFromStatment(NStmtList stmtList)
 				}
 				Instruction* instr = vectorInst::createVectorInst(computeOffset);
 				Instruction* store = StoreInst::createStore(rhs, address, (Value*)instr);
-				now->addInst(store);
-			}
-
-			if (var->isInt())
-			{
-				Instruction* rhs = getInstFromExp(&assign->rhs);
-				Instruction* store = StoreInst::createStore(rhs, address);
-				now->addInst(store);
+				last->addInst(store);
 			}
 			break;
+			
 		}
 		case 8:			
 		{
@@ -560,18 +592,16 @@ Function* Function::makeFunction(Type* returnVal, vector<Type*>arg, vector<std::
 		if (para->tName == intType)
 		{
 			Type* type = new IntType;
-			Instruction* p = AllocaInst::createAlloca(type);
-			first->addInst(p);
 			Value* val = new Value(type);
-			addSymbol(paraName[i], val);
+			p->addSymbol(paraName[i], val);
+			Module::addName(val, paraName[i]);
 		}
 		else
 		{
 			Type* type = new ArrayType(((ArrayType*)para)->num);
-			Instruction* p = AllocaInst::createAlloca(type);
-			first->addInst(p);
 			Value* val = new Value(type);
-			addSymbol(paraName[i], val);
+			p->addSymbol(paraName[i], val);
+			Module::addName(val, paraName[i]);
 		}
 	}
 	return p;
@@ -579,16 +609,24 @@ Function* Function::makeFunction(Type* returnVal, vector<Type*>arg, vector<std::
 
 void Function::RecoverSymBol()
 {
+	vector<string> earse;
 	for (auto i : recoverTable)
 	{
 		auto iter= symbolTable.find(i.first);
 		if (iter != symbolTable.end())
 		{
+			string name = iter->first;
+			Value* val = iter->second;
 			symbolTable.erase(iter);
-			symbolTable.insert(make_pair(iter->first, iter->second));
-			recoverTable.erase(recoverTable.find(i.first));
+			symbolTable.insert(make_pair(name, val));
+			earse.push_back(name);
 		}
 	}
+	for (auto i : earse)
+	{
+		recoverTable.erase(recoverTable.find(i));
+	}
+
 }
 
 
@@ -630,12 +668,13 @@ void Function::debugPrint()
 {
 	cout << "Function: " << name;
 	BaseBlock* p = entry;
-	while (p->succ_bbs_.size()!=0)
+	cout << " entry = " << p->blockType;
+	cout << " succ_bbs_= " << p->succ_bbs_.size() << " " << endl;
+	while (p->succ_bbs_.size() != 0 && p->succ_bbs_[0]!=nullptr)
 	{
 		p->debugPrint();
 		p = p->succ_bbs_[0];
 	}
+	p->debugPrint();
 	cout << endl;
-
-
 }

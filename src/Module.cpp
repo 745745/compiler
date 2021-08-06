@@ -3,7 +3,7 @@
 #include <vector>
 
 using std::vector;
-
+map<Value*, string> Module::nameTable;
 
 void Module::ASTTranslate(NCompUnit* cu)
 {
@@ -32,7 +32,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 			for (auto decl : para)
 			{
 				paraName.push_back(decl->identifier.name);
-				if (decl->size == 0)
+				if (!decl->is_array)
 				{
 					Type* paraType = new IntType();
 					arg.push_back(paraType);
@@ -62,7 +62,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 				Value* val = new Value(intType);
 				
 				addAddress(val, address);
-				address += 4;
+				address += 1;
 				addGlobalVar(name,val);
 				if (p->init == true) //if init,add value to map
 				{
@@ -79,7 +79,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 				Value* val = new Value(type);
 
 				addAddress(val, address);
-				address += 4 * ((p->lengths[0])->GetValue());
+				address += ((p->lengths[0])->GetValue());
 				addGlobalVar(name,val);
 
 				if (p->init == true)
@@ -99,7 +99,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 	}
 }
 
-void Module::addName(string name, Value* val)
+void Module::addName(Value* val,string name)
 {
 	nameTable.insert(make_pair(val, name));
 }
@@ -116,12 +116,24 @@ string Module::getName(Value* val)
 
 void Module::debugPrint()
 {
-	for (auto i : globalVar)
+	map<string, Value*>::iterator iter;
+	for (iter = globalVar.begin(); iter != globalVar.end(); iter++)
 	{
-		Value* val = getGlobalValue(i.first);
+		cout << iter->first << endl;
+		Value* val = getGlobalValue(iter->first);
+		/*
+		cout << val->isArray() << " ";
+		cout << val->isInt() << " ";
+		cout << val->isConstant << endl;
+		*/
+		/*
+		cout << iter->second->isArray() << " ";
+		cout << iter->second->isInt() << " ";
+		cout << iter->second->isConstant << endl;
+		*/
 		if (val->isArray())
 		{
-			cout << "array: " << i.first<<" ";
+			cout << "array: " << iter->first;
 			if (val->isConstant)
 			{
 				vector<int> value;
@@ -135,17 +147,16 @@ void Module::debugPrint()
 		}
 		else if (val->isInt())
 		{
-			cout << "int: " << i.first;
+			cout << "int: " << iter->first;
 			if (val->isConstant)
 			{
 				int value;
 				value = ((ConstantInt*)getConstantValue(val))->value;
-				cout << "="<<value;
+				cout << value;
 			}
 			cout << endl;
 		}
 	}
-
 	for (auto i : funcList)
 	{
 		i->debugPrint();
