@@ -1,10 +1,13 @@
 #pragma once
 
+#include <iostream>
+
 #include"User.h"
 #include"Value.h"
 #include"BasicBlock.h"
 
-class BaseBlock;
+using namespace std;
+
 class BaseBlock;
 class Function;
 
@@ -224,3 +227,4 @@ public:
 	vectorInst(vector<Instruction*> vals, BaseBlock* bb):vec(vals) {};
 	static vectorInst* createVectorInst(vector<Instruction*> vec) { return new vectorInst(vec,nullptr); };
 };
+

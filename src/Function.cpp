@@ -171,7 +171,7 @@ Instruction* Function::getInstFromExp(NExp* p)
 		NCallExp* bi = dynamic_cast<NCallExp*>(p);
 		string funcName = bi->function_name.name;
 		Function* func = parent->getFunction(funcName);
-		vector<Value*> para; //Ğ´µÄÊÇValue*£¬Êµ¼ÊÉÏÀïÃæ¶¼ÊÇInstruction*
+		vector<Value*> para; //å†™çš„æ˜¯Value*ï¼Œå®é™…ä¸Šé‡Œé¢éƒ½æ˜¯Instruction*
 		for (int i = 0; i < bi->parameters.size(); i++)
 		{
 			para.push_back(getInstFromExp(bi->parameters[i]));
@@ -304,7 +304,7 @@ void Function::getFromStatment(NStmtList stmtList)
 			break;
 		}
 		case 6:
-			//break Ö»»áÔÚwhileÀïÃæ³öÏÖ£¬ÔÚÕâÀï¿ÉÒÔ²»¹Ü
+			//break åªä¼šåœ¨whileé‡Œé¢å‡ºç°ï¼Œåœ¨è¿™é‡Œå¯ä»¥ä¸ç®¡
 			break;
 
 		case 7:
@@ -316,7 +316,7 @@ void Function::getFromStatment(NStmtList stmtList)
 			if (var->isArray())
 			{
 				IntList dim = (*assign->GetDimensions());
-				vector<int>mult;//¼ÇÂ¼Êı×é¸÷Î¬¶ÈµÄ³Ë»ı£¬·½±ã½«¸ßÎ¬·ÃÎÊ×ª»¯ÎªµÍÎ¬·ÃÎÊ
+				vector<int>mult;//è®°å½•æ•°ç»„å„ç»´åº¦çš„ä¹˜ç§¯ï¼Œæ–¹ä¾¿å°†é«˜ç»´è®¿é—®è½¬åŒ–ä¸ºä½ç»´è®¿é—®
 				int init = 1;
 				mult.push_back(init);
 				Instruction* rhs = getInstFromExp(&assign->rhs);
@@ -327,8 +327,8 @@ void Function::getFromStatment(NStmtList stmtList)
 					mult.push_back(init);
 				}
 
-				//Êı×é¶¨ÒåÎªa[3][2][2],·ÃÎÊa[2][1][1],×ª»¯Îªa[3*2*2]·ÃÎÊa[2*4+1*2+1*1]
-				//2*4+1*2+1*1ĞèÒª¶àÌõÖ¸ÁîÀ´¼ÆËã 
+				//æ•°ç»„å®šä¹‰ä¸ºa[3][2][2],è®¿é—®a[2][1][1],è½¬åŒ–ä¸ºa[3*2*2]è®¿é—®a[2*4+1*2+1*1]
+				//2*4+1*2+1*1éœ€è¦å¤šæ¡æŒ‡ä»¤æ¥è®¡ç®— 
 				vector<Instruction*> computeOffset;
 				int size = assign->lengths.size();
 				for (int i=0;i<size;i++)
