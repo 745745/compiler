@@ -316,7 +316,6 @@ void Function::getFromIf(NIfStmt* ifstmt)
 	{
 		falseStart = new BaseBlock();
 		last->succ_bbs_[1] = falseStart;
-		falseStart->pre_bbs_.push_back(last);
 		branch = BranchInst::createCondBr(instr, trueStart, falseStart,nullptr);
 	}
 	else branch = BranchInst::createCondBr(instr, trueStart, next, nullptr);
@@ -362,8 +361,6 @@ void Function::getFromIf(NIfStmt* ifstmt)
 		else
 		{
 			//µ¥ÌõÖ¸Áî
-			falseStart->pre_bbs_.push_back(last);
-			last = falseStart;
 			NStmtList p;
 			p.push_back(trueStmt);
 			getFromStatment(p);

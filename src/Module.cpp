@@ -68,7 +68,6 @@ void Module::ASTTranslate(NCompUnit* cu)
 			
 			NStmtList stmt = p->statements;
 			func->getFromStatment(stmt);
-
 			addFunction(func);
 		}
 
