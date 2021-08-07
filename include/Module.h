@@ -18,8 +18,8 @@ class Function;
 class Module
 {
 public:
-	void addFunction(Function* f) { funcList.push_back(f); };
-	void removeFunction(Function* f){};
+	static void addFunction(Function* f) { funcList.push_back(f); };
+	static void removeFunction(Function* f){};
 	Function* getFunction(string funcName);
 
 
@@ -59,7 +59,7 @@ public:
 	int address = 0;
 private:
 	map<string, Value*>globalVar;
-	vector<Function*> funcList;
+	static vector<Function*> funcList;
 	map<Value*, ConstantValue*> valueTable;
 	map<Value*, int> addressTable;
 	static map<Value*, string> nameTable;

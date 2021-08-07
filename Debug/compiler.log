@@ -2,13 +2,13 @@
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(312,21): warning C4018: “<”: 有符号/无符号不匹配
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(341,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(196,22): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(248,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(426,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(544,19): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(589,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(165): warning C4715: “getOpId”: 不是所有的控件路径都返回值
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(180): warning C4715: “judgeExp”: 不是所有的控件路径都返回值
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(267): warning C4715: “Function::getInstFromExp”: 不是所有的控件路径都返回值
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(419): warning C4715: “judgeStmt”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(216,22): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(269,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(487,20): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(606,19): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(657,20): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(176): warning C4715: “getOpId”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(200): warning C4715: “judgeExp”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(288): warning C4715: “Function::getInstFromExp”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(480): warning C4715: “judgeStmt”: 不是所有的控件路径都返回值
   compiler.vcxproj -> C:\Users\wzy\source\repos\compiler\Debug\compiler.exe

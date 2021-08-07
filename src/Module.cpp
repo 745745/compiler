@@ -4,6 +4,25 @@
 
 using std::vector;
 map<Value*, string> Module::nameTable;
+vector<Function*> Module::funcList;
+vector<string> t = { "getint","getch","getarray","putint","putch","putarray","putf","starttime","stoptime" };
+
+
+void makePredefinedFunc()
+{
+	for (auto i : t)
+	{
+		Function* p = new Function(new Type(functionType));
+		p->name = i;
+		Module::addFunction(p);
+	}
+}
+
+
+
+
+
+
 
 void Module::ASTTranslate(NCompUnit* cu)
 {

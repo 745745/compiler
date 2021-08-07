@@ -7,8 +7,10 @@ SymbolTable Node::symboltb;
 
 stack<BaseBlock*> whileIn;
 stack<BaseBlock*> whileOut;
+bool BreakSt = false;
 
 
+extern vector<string> t;
 bool isReturnStmt(NStmt* p)
 {
 	if (dynamic_cast<NReturnStmt*>(p) == nullptr)
@@ -39,6 +41,15 @@ bool isDeclStmt(NStmt* p)
 bool isWhileStmt(NStmt* p)
 {
 	if (dynamic_cast<NWhileStmt*>(p) == nullptr)
+	{
+		return false;
+	}
+	else return true;
+}
+
+bool isExpStmt(NStmt* p)
+{
+	if (dynamic_cast<NExpStmt*>(p) == nullptr)
 	{
 		return false;
 	}
@@ -164,6 +175,15 @@ Instruction::OpID getOpId(int op)
 	}
 }
 
+bool isPreDefinedFunc(string name)
+{
+	for (auto i : t)
+	{
+		if (name == i)
+			return true;
+	}
+	return false;
+}
 
 int judgeExp(NExp* exp)
 {
@@ -243,7 +263,8 @@ Instruction* Function::getInstFromExp(NExp* p)
 	{
 		NCallExp* bi = dynamic_cast<NCallExp*>(p);
 		string funcName = bi->function_name.name;
-		Function* func = parent->getFunction(funcName);
+		Function* func;
+		func = parent->getFunction(funcName);
 		vector<Value*> para; //写的是Value*，实际上里面都是Instruction*
 		for (int i = 0; i < bi->parameters.size(); i++)
 		{
@@ -277,88 +298,117 @@ void Function::getFromIf(NIfStmt* ifstmt)
 	Instruction* instr = getInstFromExp(&ifstmt->condition);	
 	BaseBlock* now = last;
 	BaseBlock* next = new BaseBlock();
+	
 
-	BaseBlock* F = new BaseBlock();
+	BaseBlock* trueLast;
+	BaseBlock* falseLast;
+	BaseBlock* falseStart;
+	BaseBlock* trueStart=new BaseBlock;
+
+	last->succ_bbs_.push_back(trueStart);
+	last->succ_bbs_.push_back(next);
+
+
+
 	bool False = (ifstmt->false_statement != nullptr);
+	Instruction* branch;
 	if (False) //False存在
 	{
-		last->succ_bbs_.push_back(F);
-		F->succ_bbs_.push_back(next);
-		F->pre_bbs_.push_back(last);
+		falseStart = new BaseBlock();
+		last->succ_bbs_[1] = falseStart;
+		falseStart->pre_bbs_.push_back(last);
+		branch = BranchInst::createCondBr(instr, trueStart, falseStart,nullptr);
 	}
+	else branch = BranchInst::createCondBr(instr, trueStart, next, nullptr);
+
+	last->addInst(branch);
+
 	//处理True分支
+	trueStart->pre_bbs_.push_back(now);
+	last = trueStart;
 	NStmt* trueStmt = &(ifstmt->true_statement);
 	NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
 	if (b!=nullptr)
 	{
 		getFromBlock(b);
-		last = last->pre_bbs_[0];
 		last->succ_bbs_.push_back(next);
+		trueLast = last;
 	}
 	else
 	{
-		//单条指令
+		//单条指令仍然要新开一个block放
+		trueStart->pre_bbs_.push_back(now);
 		NStmtList p;
 		p.push_back(trueStmt);
 		getFromStatment(p);
+		trueStart->succ_bbs_.push_back(next);
+		trueLast = last;
 	}
 
 	RecoverSymBol();
 
 	if (False)
 	{
-		last = F;
+		falseStart->pre_bbs_.push_back(now);
+		last = falseStart;
 		NStmt* trueStmt = ifstmt->false_statement;
 		NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
 		if (b != nullptr)
 		{
 			getFromBlock(b);
-			last = last->pre_bbs_[0];
 			last->succ_bbs_.push_back(next);
+			falseLast = last;
 		}
 		else
 		{
 			//单条指令
+			falseStart->pre_bbs_.push_back(last);
+			last = falseStart;
 			NStmtList p;
 			p.push_back(trueStmt);
 			getFromStatment(p);
+			falseStart->succ_bbs_.push_back(next);
+			falseLast = last;
 		}
 		RecoverSymBol();
 		
 	}
-	last = last->pre_bbs_[0];
+
 	if (False)
 	{
-		next->pre_bbs_.push_back(last->succ_bbs_[0]);
-		next->pre_bbs_.push_back(last->succ_bbs_[1]);
+		next->pre_bbs_.push_back(trueLast);
+		next->pre_bbs_.push_back(falseStart);
 	}
 	else
 	{
-		next->pre_bbs_.push_back(last->succ_bbs_[0]);
-		next->pre_bbs_.push_back(last);
+		next->pre_bbs_.push_back(trueLast);
+		next->pre_bbs_.push_back(now);
 	}
-
-	Instruction* ifBranch;
-	if (False)
-	{
-		ifBranch = BranchInst::createCondBr(instr, last->succ_bbs_[0], last->succ_bbs_[1], nullptr);
-	}
-	else ifBranch = BranchInst::createCondBr(instr, last->succ_bbs_[0], nullptr, nullptr);
-	last->addInst(ifBranch);
 	last = next;
 }
 
 void Function::getFromWhile(NWhileStmt* whileStmt)
 {
+	Instruction* condition = getInstFromExp(&whileStmt->condition);
+	Instruction* p = UnaryInst::createNot(condition, nullptr); //条件为假时，p为真，跳到out执行
 	BaseBlock* out = new BaseBlock();//while结束后下一个block
-	whileIn.push(last);
+	BaseBlock* next = new BaseBlock();//while内容block
+	Instruction* branch = BranchInst::createCondBr(p, out, nullptr, nullptr);//满足条件
+	Instruction* jmp = BranchInst::createBr(next, nullptr);//结束后跳回
+
+	last->succ_bbs_.push_back(next);
+	next->pre_bbs_.push_back(last);
+	next->addInst(branch);
+	last = next;
+	whileIn.push(next);
 	whileOut.push(out);
 	NBlockStmt* b = dynamic_cast<NBlockStmt*>(&whileStmt->statement);
 	if (b != nullptr)
 	{
 		getFromBlock(b);
-		last = last->pre_bbs_[0];
-		last->succ_bbs_.push_back(out);
+		last->succ_bbs_.push_back(whileIn.top());
+		last->addInst(jmp);
+		
 	}
 	else
 	{
@@ -366,6 +416,9 @@ void Function::getFromWhile(NWhileStmt* whileStmt)
 		NStmtList p;
 		p.push_back(&whileStmt->statement);
 		getFromStatment(p);
+		last->succ_bbs_.push_back(whileIn.top());
+		last->addInst(jmp);
+		out->pre_bbs_.push_back(whileIn.top());
 	}
 
 	RecoverSymBol();
@@ -386,14 +439,20 @@ void Function::getFromBlock(NBlockStmt* block)
 		last = p;
 	}
 	getFromStatment(block->block);
+	RecoverSymBol();
 	BaseBlock* next;
 	if (last->insrList.size() == 0)
+	{
 		next = last;
-	else next = new BaseBlock();
-	BaseBlock* now = last;
-	RecoverSymBol();
+	}
+	else
+	{
+		next = new BaseBlock();
+		last->succ_bbs_.push_back(next);
+		next->pre_bbs_.push_back(last);
+	}
+	
 	last = next;
-	next->pre_bbs_.push_back(now);
 }
 
 
@@ -416,6 +475,8 @@ int judgeStmt(NStmt* p)
 		return 7;
 	if (iscontinueStmt(p))
 		return 8;
+	if (isExpStmt(p))
+		return 9;
 }
 
 void Function::getFromStatment(NStmtList stmtList)
@@ -432,7 +493,8 @@ void Function::getFromStatment(NStmtList stmtList)
 		{
 			NReturnStmt* ret = dynamic_cast<NReturnStmt*>(stmt);
 			Instruction* instr = getInstFromExp(ret->return_value);
-			last->insrList.push_back(instr);
+			Instruction* retInstr = ReturnInst::createRet(instr, nullptr);
+			last->addInst(retInstr);
 			break;
 		}
 		case 2:
@@ -517,7 +579,8 @@ void Function::getFromStatment(NStmtList stmtList)
 			last->succ_bbs_.push_back(whileOut.top());
 			Instruction* p = BranchInst::createBr(whileOut.top(), last);
 			last->addInst(p);
-			last = new BaseBlock();
+			BreakSt = true;
+			goto breakcontinue; //berak后续的指令不可能执行了，可以不读取直接结束
 			break;
 		}
 		case 7:
@@ -568,15 +631,24 @@ void Function::getFromStatment(NStmtList stmtList)
 		}
 		case 8:			
 		{
-			last->succ_bbs_.push_back(whileIn.top());
-			Instruction* p = BranchInst::createBr(whileIn.top(), last);
-			last = new BaseBlock();
-			break;
+			last->succ_bbs_.push_back(whileOut.top());
+			Instruction* p = BranchInst::createBr(whileOut.top(), last);
+			last->addInst(p);
+			BreakSt = true;
+			goto breakcontinue; //berak后续的指令不可能执行了，可以不读取直接结束
+			break;		
 		}
+
+		case 9:
+		{
+			Instruction* p = getInstFromExp(&((NExpStmt*)stmt)->expression);
+			last->addInst(p);
+		}
+
 		default:	break;
 		}
 	}
-	return;
+	breakcontinue :return;
 }
 
 Function* Function::makeFunction(Type* returnVal, vector<Type*>arg, vector<std::string> paraName)
