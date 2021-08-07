@@ -3,7 +3,7 @@
 void BaseBlock::debugPrint()
 {
 	cout << "    BlockType ";
-	cout << blockType << " ";
+	cout << name.at(blockType) << " ";
 	Instruction* inst;
 	cout << "InstructionListLength = " << insrList.size() << endl;
 	for (auto inst : insrList)

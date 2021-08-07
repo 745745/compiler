@@ -21,7 +21,14 @@ public:
 	{
 		Basic,
 		If,
-		While,
+		While
+	};
+
+	const map<BlockType, const char*> name = 
+	{
+		{Basic,"Basic"},
+		{If,"If"},
+		{While,"While"}
 	};
 
 	void addInst(Instruction* inst) { insrList.push_back(inst); };

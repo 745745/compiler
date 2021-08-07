@@ -37,7 +37,7 @@ public:
 
 	static Function* makeFunction(Type* returnVal, vector<Type*>arg, vector<std::string> paraName);
 
-	//block½áÊø£¬½«recoverTableÖĞµÄ·ûºÅÖØĞÂĞ´»ØsymbolTableÖĞ
+	//blockç»“æŸï¼Œå°†recoverTableä¸­çš„ç¬¦å·é‡æ–°å†™å›symbolTableä¸­
 	void RecoverSymBol();
 
 	void debugPrint();

@@ -190,7 +190,7 @@ Instruction* Function::getInstFromExp(NExp* p)
 		if (ident->array_def.size() != 0)//array
 		{
 			IntList dim = *(ident->GetDimensions());
-			vector<int>mult;//¼ÇÂ¼Êı×é¸÷Î¬¶ÈµÄ³Ë»ı£¬·½±ã½«¸ßÎ¬·ÃÎÊ×ª»¯ÎªµÍÎ¬·ÃÎÊ
+			vector<int>mult;//è®°å½•æ•°ç»„å„ç»´åº¦çš„ä¹˜ç§¯ï¼Œæ–¹ä¾¿å°†é«˜ç»´è®¿é—®è½¬åŒ–ä¸ºä½ç»´è®¿é—®
 			int init = 1;
 			mult.push_back(init);
 			for (int i = 1; i < dim.size(); i++)
@@ -199,8 +199,8 @@ Instruction* Function::getInstFromExp(NExp* p)
 				mult.push_back(init);
 			}
 
-			//Êı×é¶¨ÒåÎªa[3][2][2],·ÃÎÊa[2][1][1],×ª»¯Îªa[3*2*2]·ÃÎÊa[2*4+1*2+1*1]
-			//2*4+1*2+1*1ĞèÒª¶àÌõÖ¸ÁîÀ´¼ÆËã 
+			//æ•°ç»„å®šä¹‰ä¸ºa[3][2][2],è®¿é—®a[2][1][1],è½¬åŒ–ä¸ºa[3*2*2]è®¿é—®a[2*4+1*2+1*1]
+			//2*4+1*2+1*1éœ€è¦å¤šæ¡æŒ‡ä»¤æ¥è®¡ç®— 
 			vector<Instruction*> computeOffset;
 			int size = ident->array_def.size();
 			for (int i = 0; i < size; i++)
@@ -244,7 +244,7 @@ Instruction* Function::getInstFromExp(NExp* p)
 		NCallExp* bi = dynamic_cast<NCallExp*>(p);
 		string funcName = bi->function_name.name;
 		Function* func = parent->getFunction(funcName);
-		vector<Value*> para; //Ğ´µÄÊÇValue*£¬Êµ¼ÊÉÏÀïÃæ¶¼ÊÇInstruction*
+		vector<Value*> para; //å†™çš„æ˜¯Value*ï¼Œå®é™…ä¸Šé‡Œé¢éƒ½æ˜¯Instruction*
 		for (int i = 0; i < bi->parameters.size(); i++)
 		{
 			para.push_back(getInstFromExp(bi->parameters[i]));
@@ -280,13 +280,13 @@ void Function::getFromIf(NIfStmt* ifstmt)
 
 	BaseBlock* F = new BaseBlock();
 	bool False = (ifstmt->false_statement != nullptr);
-	if (False) //False´æÔÚ
+	if (False) //Falseå­˜åœ¨
 	{
 		last->succ_bbs_.push_back(F);
 		F->succ_bbs_.push_back(next);
 		F->pre_bbs_.push_back(last);
 	}
-	//´¦ÀíTrue·ÖÖ§
+	//å¤„ç†Trueåˆ†æ”¯
 	NStmt* trueStmt = &(ifstmt->true_statement);
 	NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
 	if (b!=nullptr)
@@ -297,7 +297,7 @@ void Function::getFromIf(NIfStmt* ifstmt)
 	}
 	else
 	{
-		//µ¥ÌõÖ¸Áî
+		//å•æ¡æŒ‡ä»¤
 		NStmtList p;
 		p.push_back(trueStmt);
 		getFromStatment(p);
@@ -318,7 +318,7 @@ void Function::getFromIf(NIfStmt* ifstmt)
 		}
 		else
 		{
-			//µ¥ÌõÖ¸Áî
+			//å•æ¡æŒ‡ä»¤
 			NStmtList p;
 			p.push_back(trueStmt);
 			getFromStatment(p);
@@ -350,7 +350,7 @@ void Function::getFromIf(NIfStmt* ifstmt)
 
 void Function::getFromWhile(NWhileStmt* whileStmt)
 {
-	BaseBlock* out = new BaseBlock();//while½áÊøºóÏÂÒ»¸öblock
+	BaseBlock* out = new BaseBlock();//whileç»“æŸåä¸‹ä¸€ä¸ªblock
 	whileIn.push(last);
 	whileOut.push(out);
 	NBlockStmt* b = dynamic_cast<NBlockStmt*>(&whileStmt->statement);
@@ -362,7 +362,7 @@ void Function::getFromWhile(NWhileStmt* whileStmt)
 	}
 	else
 	{
-		//µ¥ÌõÖ¸Áî
+		//å•æ¡æŒ‡ä»¤
 		NStmtList p;
 		p.push_back(&whileStmt->statement);
 		getFromStatment(p);
@@ -512,7 +512,7 @@ void Function::getFromStatment(NStmtList stmtList)
 			break;
 		}
 		case 6:
-			//Ìø³öwhile£¬Ìøµ½WhileOutµÄÕ»¶¥µØÖ·
+			//è·³å‡ºwhileï¼Œè·³åˆ°WhileOutçš„æ ˆé¡¶åœ°å€
 		{
 			last->succ_bbs_.push_back(whileOut.top());
 			Instruction* p = BranchInst::createBr(whileOut.top(), last);
@@ -533,10 +533,10 @@ void Function::getFromStatment(NStmtList stmtList)
 				last->addInst(store);
 			}
 			
-			else //Êı×é¼°Ö¸Õë
+			else //æ•°ç»„åŠæŒ‡é’ˆ
 			{
 				IntList dim = (*assign->GetDimensions());
-				vector<int>mult;//¼ÇÂ¼Êı×é¸÷Î¬¶ÈµÄ³Ë»ı£¬·½±ã½«¸ßÎ¬·ÃÎÊ×ª»¯ÎªµÍÎ¬·ÃÎÊ
+				vector<int>mult;//è®°å½•æ•°ç»„å„ç»´åº¦çš„ä¹˜ç§¯ï¼Œæ–¹ä¾¿å°†é«˜ç»´è®¿é—®è½¬åŒ–ä¸ºä½ç»´è®¿é—®
 				int init = 1;
 				mult.push_back(init);
 				Instruction* rhs = getInstFromExp(&assign->rhs);
@@ -547,8 +547,8 @@ void Function::getFromStatment(NStmtList stmtList)
 					mult.push_back(init);
 				}
 
-				//Êı×é¶¨ÒåÎªa[3][2][2],·ÃÎÊa[2][1][1],×ª»¯Îªa[3*2*2]·ÃÎÊa[2*4+1*2+1*1]
-				//2*4+1*2+1*1ĞèÒª¶àÌõÖ¸ÁîÀ´¼ÆËã 
+				//æ•°ç»„å®šä¹‰ä¸ºa[3][2][2],è®¿é—®a[2][1][1],è½¬åŒ–ä¸ºa[3*2*2]è®¿é—®a[2*4+1*2+1*1]
+				//2*4+1*2+1*1éœ€è¦å¤šæ¡æŒ‡ä»¤æ¥è®¡ç®— 
 				vector<Instruction*> computeOffset;
 				int size = assign->lengths.size();
 				for (int i=0;i<size;i++)
@@ -667,14 +667,16 @@ Value* Function::findValue(string name)
 void Function::debugPrint()
 {
 	cout << "Function: " << name;
-	BaseBlock* p = entry;
-	cout << " entry = " << p->blockType;
-	cout << " succ_bbs_= " << p->succ_bbs_.size() << " " << endl;
-	while (p->succ_bbs_.size() != 0 && p->succ_bbs_[0]!=nullptr)
+	BaseBlock* p1 = entry;
+	BaseBlock* p2 = last;
+	cout << " entry = " << p1->blockType;
+	cout << " last = " << p2->blockType;
+	cout << " succ_bbs_= " << p1->succ_bbs_.size() << " " << endl;
+	while (p1->succ_bbs_.size() != 0 && p1->succ_bbs_[0]!=nullptr)
 	{
-		p->debugPrint();
-		p = p->succ_bbs_[0];
+		p1->debugPrint();
+		p1 = p1->succ_bbs_[0];
 	}
-	p->debugPrint();
+	p1->debugPrint();
 	cout << endl;
 }
