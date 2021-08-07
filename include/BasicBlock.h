@@ -14,7 +14,7 @@ using std::set;
 class Function;
 class Instruction;
 
-class BaseBlock 
+class BaseBlock :public Value
 {
 public:
 	enum BlockType 
@@ -34,11 +34,12 @@ public:
 	std::vector<BaseBlock*> succ_bbs_;
 	void debugPrint();
 
-	BaseBlock()
+	BaseBlock():Value(voidType)
 	{
 		parent = nullptr;
 	}
 };
+
 
 
 class BasicBlock:public BaseBlock

@@ -49,8 +49,9 @@ public:
 	void addGlobalVar(string name, Value* val) { globalVar.insert(make_pair(name, val)); }
 	void addConstantValue(Value* val, ConstantValue* cVal) { valueTable.insert(make_pair(val, cVal)); };
 	void ASTTranslate(NCompUnit* cu);
-	string getName(Value*);
 
+	static void addName(Value* val,string name);
+	static string getName(Value*);
 
 	void addAddress(Value* p, int add) { addressTable.insert(make_pair(p, add)); };
 
@@ -61,5 +62,5 @@ private:
 	vector<Function*> funcList;
 	map<Value*, ConstantValue*> valueTable;
 	map<Value*, int> addressTable;
-	map<Value*, string> nameTable;
+	static map<Value*, string> nameTable;
 };

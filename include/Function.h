@@ -18,10 +18,6 @@ class Instruction;
 class Function :public User
 {
 public:
-	void addBasicBlock(BaseBlock* p);
-
-	void removeBasicBlock(BaseBlock* p);
-
 	void getFromStatment(NStmtList stmtList);
 	
 	void getFromBlock(NBlockStmt* block);
@@ -30,17 +26,19 @@ public:
 
 	void getFromIf(NIfStmt* ifstmt);
 
-	static void addSymbol(string name, Value* val) { symbolTable.insert(make_pair(name, val)); }
+	void addSymbol(string name, Value* val);
 
-	Value* findValue(string name, BaseBlock* p) { return (symbolTable.find(name))->second; }
+	Value* findValue(string name);
 
 	Instruction* getInstFromExp(NExp* p);
 
-	Function(Type* type) :User(type) {};
+	Function(Type* type);
+
 
 	static Function* makeFunction(Type* returnVal, vector<Type*>arg, vector<std::string> paraName);
 
-
+	//block结束，将recoverTable中的符号重新写回symbolTable中
+	void RecoverSymBol();
 
 	void debugPrint();
 
@@ -54,11 +52,10 @@ public:
 		this->parent = p;
 	}
 
-	static map<string, Value*> symbolTable;
-	static map<string, Value*> recoverTable;
+	map<string, Value*> symbolTable;
+	map<string, Value*> recoverTable;
 	string name;
 	BaseBlock* entry;
 	BaseBlock* last;
 	Module* parent;
-
 };

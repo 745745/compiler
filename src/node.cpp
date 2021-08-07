@@ -1,6 +1,6 @@
 #include "../include/node.h"
 #include "parser.hpp"
-// node.h åœ¨å‰ï¼Œ parser.hpp åœ¨åï¼Œ å‹¿åŠ¨
+// node.h ÔÚÇ°£¬ parser.hpp ÔÚºó£¬ Îğ¶¯
 
 int NBinaryExp::GetValue()
 {
@@ -55,7 +55,7 @@ void SymbolTable::AddSymbol(NIdentifier& ident, int scope, NExpList lengths, NEx
 
 int SymbolTable::GetSymbolValue(NIdentifier& ident, NExpList& array_def, int scope, Node* parent)
 {
-    // ä»ç¬¦å·è¡¨ä¸­æŸ¥æ‰¾ä¸€ä¸ªç¬¦å·çš„å€¼
+    // ´Ó·ûºÅ±íÖĞ²éÕÒÒ»¸ö·ûºÅµÄÖµ
     auto result = this->valueTable.find({ scope, ident.name });
 
     if (result != valueTable.end())
@@ -64,7 +64,7 @@ int SymbolTable::GetSymbolValue(NIdentifier& ident, NExpList& array_def, int sco
     }
     else if (scope != 0)
     {
-        // å¦‚æœæ˜¯å±€éƒ¨å˜é‡ä¸”åœ¨å‡½æ•°å†…æœªè¢«é‡å®šä¹‰
+        // Èç¹ûÊÇ¾Ö²¿±äÁ¿ÇÒÔÚº¯ÊıÄÚÎ´±»ÖØ¶¨Òå
         auto result = this->valueTable.find({ 0, ident.name });
         if (result != valueTable.end())
         {
@@ -87,7 +87,7 @@ int SymbolTable::GetSymbolValue(NIdentifier& ident, NExpList& array_def, int sco
 
 Symbol* SymbolTable::GetSymbol(NIdentifier& ident, int scope)
 {
-    // ä»ç¬¦å·è¡¨ä¸­æŸ¥æ‰¾ä¸€ä¸ªç¬¦å·çš„å€¼
+    // ´Ó·ûºÅ±íÖĞ²éÕÒÒ»¸ö·ûºÅµÄÖµ
     auto result = this->valueTable.find({ scope, ident.name });
 
     if (result != valueTable.end())
@@ -96,7 +96,7 @@ Symbol* SymbolTable::GetSymbol(NIdentifier& ident, int scope)
     }
     else if (scope != 0)
     {
-        // å¦‚æœæ˜¯å±€éƒ¨å˜é‡ä¸”åœ¨å‡½æ•°å†…æœªè¢«é‡å®šä¹‰
+        // Èç¹ûÊÇ¾Ö²¿±äÁ¿ÇÒÔÚº¯ÊıÄÚÎ´±»ÖØ¶¨Òå
         auto result = this->valueTable.find({ 0, ident.name });
         if (result != valueTable.end())
         {
@@ -125,7 +125,7 @@ int Symbol::GetValue(NExpList array_def)
         int index = 0;
         int i = 0;
         int nowsize = this->parent->size;
-        // ç»™å®šä¸€ä¸ªæ•°ç»„a[4][2][3], æ±‚æ•°ç»„åœ¨a[2][1][1]ä¸Šçš„å¼•ç”¨æ—¶ç”¨2 * size / 4 + 1 * size / 4 / 2 + 1 * size / 4 / 2 / 3
+        // ¸ø¶¨Ò»¸öÊı×éa[4][2][3], ÇóÊı×éÔÚa[2][1][1]ÉÏµÄÒıÓÃÊ±ÓÃ2 * size / 4 + 1 * size / 4 / 2 + 1 * size / 4 / 2 / 3
         for (auto dimension : array_def)
         {
             auto iterator = this->parent->dimensionLength->begin();
@@ -151,7 +151,7 @@ void SymbolTable::SetValue(NIdentifier& name, NExpList& lengths, NExp& rhs, int 
     }
     else if (scope != 0)
     {
-        // å±€éƒ¨å˜é‡ è¿˜å¯ä»¥å»å…¨å±€å˜é‡ä¸­æŸ¥æ‰¾
+        // ¾Ö²¿±äÁ¿ »¹¿ÉÒÔÈ¥È«¾Ö±äÁ¿ÖĞ²éÕÒ
         auto result = valueTable.find({ 0, name.name });
         if (result != valueTable.end())
         {

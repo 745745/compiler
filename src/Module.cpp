@@ -3,7 +3,7 @@
 #include <vector>
 
 using std::vector;
-using namespace std;
+map<Value*, string> Module::nameTable;
 
 void Module::ASTTranslate(NCompUnit* cu)
 {
@@ -32,7 +32,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 			for (auto decl : para)
 			{
 				paraName.push_back(decl->identifier.name);
-				if (decl->size == 0)
+				if (!decl->is_array)
 				{
 					Type* paraType = new IntType();
 					arg.push_back(paraType);
@@ -46,6 +46,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 			Function* func = Function::makeFunction(t, arg,paraName);
 			func->setName(name);
 			func->setParent(this);
+			
 			NStmtList stmt = p->statements;
 			func->getFromStatment(stmt);
 
@@ -58,18 +59,17 @@ void Module::ASTTranslate(NCompUnit* cu)
 			string name = p->identifier.name;
 			if (len == 0) //int
 			{
-				Type* type = new Type();
-				type->tName == intType;
-				Value* val = new Value(type);
+				Value* val = new Value(intType);
 				
 				addAddress(val, address);
-				address += 4;
+				address += 1;
 				addGlobalVar(name,val);
 				if (p->init == true) //if init,add value to map
 				{
 					int intVal = p->initvalue->GetValue();
 					ConstantInt* constInt = new ConstantInt(intVal);
 					addConstantValue(val, constInt);
+					val->isConstant = true;
 				}
 			}
 
@@ -79,7 +79,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 				Value* val = new Value(type);
 
 				addAddress(val, address);
-				address += 4 * ((p->lengths[0])->GetValue());
+				address += ((p->lengths[0])->GetValue());
 				addGlobalVar(name,val);
 
 				if (p->init == true)
@@ -92,16 +92,32 @@ void Module::ASTTranslate(NCompUnit* cu)
 					}
 					ConstantArray* array = new ConstantArray(arrayValue);
 					addConstantValue(val, array);
+					val->isConstant = true;
 				}
 			}
 		}
 	}
 }
 
+void Module::addName(Value* val,string name)
+{
+	nameTable.insert(make_pair(val, name));
+}
+
+string Module::getName(Value* val)
+{
+	auto iter = nameTable.find(val);
+	if (iter != nameTable.end())
+	{
+		return iter->second;
+	}
+	return string();
+}
+
 void Module::debugPrint()
 {
 	map<string, Value*>::iterator iter;
-	for ( iter = globalVar.begin(); iter != globalVar.end(); iter++)
+	for (iter = globalVar.begin(); iter != globalVar.end(); iter++)
 	{
 		cout << iter->first << endl;
 		Value* val = getGlobalValue(iter->first);
