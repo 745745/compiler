@@ -58,6 +58,9 @@ void Module::ASTTranslate(NCompUnit* cu)
 				}
 				else
 				{
+					//a[]的情况，数组长度为0
+					if (decl->size < 0)
+						decl->size = 0;
 					Type* paraType = new ArrayType(decl->size);
 					arg.push_back(paraType);
 				}

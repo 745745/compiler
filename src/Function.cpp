@@ -7,7 +7,6 @@ SymbolTable Node::symboltb;
 
 stack<BaseBlock*> whileIn;
 stack<BaseBlock*> whileOut;
-bool BreakSt = false;
 
 
 extern vector<string> t;
@@ -576,7 +575,6 @@ void Function::getFromStatment(NStmtList stmtList)
 			last->succ_bbs_.push_back(whileOut.top());
 			Instruction* p = BranchInst::createBr(whileOut.top(), last);
 			last->addInst(p);
-			BreakSt = true;
 			goto breakcontinue; //berak后续的指令不可能执行了，可以不读取直接结束
 			break;
 		}
@@ -631,7 +629,6 @@ void Function::getFromStatment(NStmtList stmtList)
 			last->succ_bbs_.push_back(whileOut.top());
 			Instruction* p = BranchInst::createBr(whileOut.top(), last);
 			last->addInst(p);
-			BreakSt = true;
 			goto breakcontinue; //berak后续的指令不可能执行了，可以不读取直接结束
 			break;		
 		}

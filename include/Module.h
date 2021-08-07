@@ -55,7 +55,13 @@ public:
 
 	void addAddress(Value* p, int add) { addressTable.insert(make_pair(p, add)); };
 
-	int getAddress(Value* p) { return (addressTable.find(p))->second; };
+	int getAddress(Value* p) 
+	{ 
+		auto iter = addressTable.find(p);
+		if (iter != addressTable.end())
+			return iter->second;
+		else return 0;
+	}
 	int address = 0;
 private:
 	map<string, Value*>globalVar;

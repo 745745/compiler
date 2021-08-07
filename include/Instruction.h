@@ -115,6 +115,7 @@ public:
 	{GE,"GE"}, //>=
 	{LT,"LT"}, //<
 	{LE,"LE"},  //<=
+		{Mod,"Mod"}
 	};
 
 

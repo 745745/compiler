@@ -1,14 +1,36 @@
-﻿  Function.cpp
+﻿  BasicBlock.cpp
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(312,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(341,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(216,22): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(269,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(484,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(604,19): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(658,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(176): warning C4715: “getOpId”: 不是所有的控件路径都返回值
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(200): warning C4715: “judgeExp”: 不是所有的控件路径都返回值
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(288): warning C4715: “Function::getInstFromExp”: 不是所有的控件路径都返回值
-C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(477): warning C4715: “judgeStmt”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\BasicBlock.cpp(7,15): warning C4101: “inst”: 未引用的局部变量
+  Function.cpp
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(215,22): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(268,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(483,20): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(602,19): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(655,20): warning C4018: “<”: 有符号/无符号不匹配
+  Instrucion.cpp
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Instrucion.cpp(16,23): warning C4018: “<”: 有符号/无符号不匹配
+  Module.cpp
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Module.cpp(30,20): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Module.cpp(109,24): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\src\Module.cpp(162,23): warning C4018: “<”: 有符号/无符号不匹配
+  main.cpp
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
+C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
+  正在生成代码...
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(175): warning C4715: “getOpId”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(199): warning C4715: “judgeExp”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(287): warning C4715: “Function::getInstFromExp”: 不是所有的控件路径都返回值
+C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(476): warning C4715: “judgeStmt”: 不是所有的控件路径都返回值
   compiler.vcxproj -> C:\Users\wzy\source\repos\compiler\Debug\compiler.exe
