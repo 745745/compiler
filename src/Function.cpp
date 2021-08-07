@@ -729,18 +729,29 @@ Value* Function::findValue(string name)
 
 
 
-
 void Function::debugPrint()
 {
+	vector<BaseBlock*> memberList;
 	cout << "Function: " << name;
 	BaseBlock* p = entry;
 	cout << " entry = " << p->blockType;
 	cout << " succ_bbs_= " << p->succ_bbs_.size() << " " << endl;
-	while (p->succ_bbs_.size() != 0 && p->succ_bbs_[0]!=nullptr)
+	bool loop = true;
+	while (p->succ_bbs_.size() != 0 && p->succ_bbs_[0] != nullptr && loop)
 	{
+		for (auto pp : memberList)
+		{
+			if (pp == p)
+			{
+				loop = false;
+				cout << "LOOP detected! Exit The LOOP!!!" << endl;
+			}
+		}
+		memberList.push_back(p);
 		p->debugPrint();
 		p = p->succ_bbs_[0];
 	}
+	memberList.push_back(p);
 	p->debugPrint();
 	cout << endl;
 }

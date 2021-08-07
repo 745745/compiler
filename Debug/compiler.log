@@ -1,9 +1,4 @@
-﻿  BasicBlock.cpp
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\BasicBlock.cpp(7,15): warning C4101: “inst”: 未引用的局部变量
-  Function.cpp
+﻿  Function.cpp
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
@@ -12,18 +7,6 @@ C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(268,21): warning C4
 C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(483,20): warning C4018: “<”: 有符号/无符号不匹配
 C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(602,19): warning C4018: “<”: 有符号/无符号不匹配
 C:\Users\wzy\source\repos\compiler\compiler\src\Function.cpp(655,20): warning C4018: “<”: 有符号/无符号不匹配
-  Instrucion.cpp
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Instrucion.cpp(16,23): warning C4018: “<”: 有符号/无符号不匹配
-  Module.cpp
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(342,21): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Module.cpp(30,20): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Module.cpp(109,24): warning C4018: “<”: 有符号/无符号不匹配
-C:\Users\wzy\source\repos\compiler\compiler\src\Module.cpp(162,23): warning C4018: “<”: 有符号/无符号不匹配
   main.cpp
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(1,1): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 C:\Users\wzy\source\repos\compiler\compiler\include\Instruction.h(313,21): warning C4018: “<”: 有符号/无符号不匹配
