@@ -4,7 +4,7 @@ void Instruction::debugPrint()
 {
 	cout << "		";
 	cout << name.at(id) << " ";
-	cout <<"argNum:"<< args.size() << " ";
+	cout <<"arg Num:"<< args.size() << " ";
 	for (Value* arg : args)
 	{
 		if (arg->isArray())

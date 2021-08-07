@@ -3024,7 +3024,6 @@ Function: main entry = 0 succ_bbs_= 1
 		Store argNum:2 
 Segmentation fault
 
-
 This is test: 059_short_circuit2.sy 
 
 int func(int n) {

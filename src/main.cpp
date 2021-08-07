@@ -1,8 +1,8 @@
 #include <iostream>
 #include<stdio.h>
 #include "../include/node.h"
-#include"../include/Module.h"
-using namespace std;
+#include "../include/Module.h"
+#include "../include/Pass.h"
 
 extern FILE* yyin;
 extern int yyparse();
@@ -28,7 +28,10 @@ int main(int argc, char* argv[])
     }
     fclose(fp);
     Module p;
+    loopDetection pass;
     p.ASTTranslate(CompUnit);
+    //pass.setModule(p);
+    //pass.run();
     p.debugPrint();
     return 0;
 }

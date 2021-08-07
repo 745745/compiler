@@ -1,0 +1,12 @@
+int a = 1;
+int b = 2;
+
+int main() {
+	int c;
+	c = 3;
+	while (c < 5) {
+		c = c + 1;
+		b = 3;
+	}
+	return (a + b + c);
+}
