@@ -17,7 +17,7 @@ void BaseBlock::addInst(Instruction* inst)
 
 void BaseBlock::debugPrint()
 {
-	std::cout << "    [Block " << this << ", type " << BlockTypeStr[blockType] << "]\n";
+	std::cout << "    [Block "  << ", type " << BlockTypeStr[blockType] << "]\n";
 	for (auto inst : insrList)
 	{
 		if (inst->id != Instruction::Constant)

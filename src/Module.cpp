@@ -150,52 +150,42 @@ string Module::getName(Value* val)
 
 void Module::debugPrint()
 {
-	map<string, Value*>::iterator iter;
-	for (iter = globalVar.begin(); iter != globalVar.end(); iter++)
+	std::cout << "@ Global Values\n";
+	for (auto iter : globalVar)
 	{
-		cout << iter->first << endl;
-		Value* val = getGlobalValue(iter->first);
-		/*
-		cout << val->isArray() << " ";
-		cout << val->isInt() << " ";
-		cout << val->isConstant << endl;
-		*/
-		/*
-		cout << iter->second->isArray() << " ";
-		cout << iter->second->isInt() << " ";
-		cout << iter->second->isConstant << endl;
-		*/
+		string name = iter.first;
+		Value* val = iter.second;
+		std::cout << "\t[" << name;
 		if (val->isArray())
 		{
-			cout << "array: " << iter->first;
-			if (val->isConstant)
+			std::cout << " Arr";
+			auto v = dynamic_cast<ConstantArray*>(getConstantValue(val));
+			std::cout << "[" << reinterpret_cast<ArrayType*>(val->type)->num << "]";
+			if (v != nullptr)
 			{
-				vector<int> value;
-				value = ((ConstantArray*)getConstantValue(val))->value;
-				for (int i = 0; i < value.size(); i++)
-				{
-					cout << value[i] << " ";
-				}
+				std::cout << " = {";
+				for (auto i : v->value)
+					std::cout << " " << i;
+				std::cout << " }";
 			}
-			cout << endl;
 		}
-		else if (val->isInt())
+		else
 		{
-			cout << "int: " << iter->first;
-			if (val->isConstant)
-			{
-				int value;
-				value = ((ConstantInt*)getConstantValue(val))->value;
-				cout << value;
-			}
-			cout << endl;
+			std::cout << " Int";
+			auto v = dynamic_cast<ConstantInt*>(getConstantValue(val));
+			if (v != nullptr)
+				std::cout << " = " << v->value;
 		}
+		std::cout << "]\n";
 	}
+
+	std::cout << "\n@ Functions\n";
 	for (auto i : funcList)
 	{
 		i->debugPrint();
 	}
 };
+
 
 
 Function* Module::getFunction(string funcName)

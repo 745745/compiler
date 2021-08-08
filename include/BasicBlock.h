@@ -37,6 +37,7 @@ public:
 	BaseBlock():Value(voidType)
 	{
 		parent = nullptr;
+		blockType = Basic;
 	}
 };
 

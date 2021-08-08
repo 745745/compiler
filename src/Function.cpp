@@ -750,6 +750,8 @@ void Function::addArrayParamDefine(string name, vector<int> dim)
 void Function::debugPrint()
 {
 	vector<BaseBlock*> memberList;
+	if (isPreDefinedFunc(name))
+		return;
 	cout << "Function: " << name;
 	BaseBlock* p = entry;
 	cout << " entry = " << p->blockType;
