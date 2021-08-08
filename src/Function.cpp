@@ -548,9 +548,8 @@ void Function::getFromStatment(NStmtList stmtList)
 						newVal->isConstant = true;
 						for (int i = 0; i < dec->size; i++)
 						{
-							int val = (*dec->finalInitValue)[i];
-							ConstantInt* constInt = new ConstantInt(val);
-							auto instr = new StoreInst(constInt, newVal, new ConstantInt(i), MemInstrType::Frame);
+							Instruction* val = getInstFromExp(&dec->initvalue[i]);
+							auto instr = new StoreInst(val, newVal, new ConstantInt(i), MemInstrType::Frame);
 						}
 					}
 				}
