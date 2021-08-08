@@ -1,4 +1,4 @@
-#include"../include/Function.h"
+ï»¿#include"../include/Function.h"
 #include<stack>
 using std::stack;
 
@@ -208,18 +208,21 @@ Instruction* Function::getInstFromExp(NExp* p)
 		string name = ident->name.name;
 		if (ident->array_def.size() != 0)//array
 		{
-			IntList dim = *(ident->GetDimensions());
-			vector<int>mult;//¼ÇÂ¼Êı×é¸÷Î¬¶ÈµÄ³Ë»ı£¬·½±ã½«¸ßÎ¬·ÃÎÊ×ª»¯ÎªµÍÎ¬·ÃÎÊ
+			IntList* dim=getArrayParamDefine(name);//æ£€æµ‹æ˜¯ä¸æ˜¯å‚æ•°é‡Œé¢çš„æ•°ç»„
+			if (dim == nullptr)
+				dim = ident->GetDimensions();
+
+			vector<int>mult;//è®°å½•æ•°ç»„å„ç»´åº¦çš„ä¹˜ç§¯ï¼Œæ–¹ä¾¿å°†é«˜ç»´è®¿é—®è½¬åŒ–ä¸ºä½ç»´è®¿é—®
 			int init = 1;
 			mult.push_back(init);
-			for (int i = 1; i < dim.size(); i++)
+			for (int i = 1; i < dim->size(); i++)
 			{
-				init *= dim[i];
+				init *= (*dim)[i];
 				mult.push_back(init);
 			}
 
-			//Êı×é¶¨ÒåÎªa[3][2][2],·ÃÎÊa[2][1][1],×ª»¯Îªa[3*2*2]·ÃÎÊa[2*4+1*2+1*1]
-			//2*4+1*2+1*1ĞèÒª¶àÌõÖ¸ÁîÀ´¼ÆËã 
+			//æ•°ç»„å®šä¹‰ä¸ºa[3][2][2],è®¿é—®a[2][1][1],è½¬åŒ–ä¸ºa[3*2*2]è®¿é—®a[2*4+1*2+1*1]
+			//2*4+1*2+1*1éœ€è¦å¤šæ¡æŒ‡ä»¤æ¥è®¡ç®— 
 			vector<Instruction*> computeOffset;
 			int size = ident->array_def.size();
 			for (int i = 0; i < size; i++)
@@ -229,14 +232,14 @@ Instruction* Function::getInstFromExp(NExp* p)
 				Instruction* instr = BinaryInst::createMul(val1, val2,last);
 				computeOffset.push_back(instr);
 			}
-			Instruction* instr = vectorInst::createVectorInst(computeOffset);
+			auto instr = computeOffset[0];
 			return instr;
 		}
 		else //int
 		{
 			Value* val = findValue(name);
-			int address = parent->getAddress(val);
-			Instruction* instr = LoadInst::createLoad(address);
+			int address = addressTable[val];
+			auto instr = new LoadInst(val, nullptr, MemInstrType::Frame);
 			return instr;
 		}
 	}
@@ -264,7 +267,7 @@ Instruction* Function::getInstFromExp(NExp* p)
 		string funcName = bi->function_name.name;
 		Function* func;
 		func = parent->getFunction(funcName);
-		vector<Value*> para; //Ğ´µÄÊÇValue*£¬Êµ¼ÊÉÏÀïÃæ¶¼ÊÇInstruction*
+		vector<Value*> para; //å†™çš„æ˜¯Value*ï¼Œå®é™…ä¸Šé‡Œé¢éƒ½æ˜¯Instruction*
 		for (int i = 0; i < bi->parameters.size(); i++)
 		{
 			para.push_back(getInstFromExp(bi->parameters[i]));
@@ -307,11 +310,9 @@ void Function::getFromIf(NIfStmt* ifstmt)
 	last->succ_bbs_.push_back(trueStart);
 	last->succ_bbs_.push_back(next);
 
-
-
 	bool False = (ifstmt->false_statement != nullptr);
 	Instruction* branch;
-	if (False) //False´æÔÚ
+	if (False) //Falseå­˜åœ¨
 	{
 		falseStart = new BaseBlock();
 		last->succ_bbs_[1] = falseStart;
@@ -321,7 +322,7 @@ void Function::getFromIf(NIfStmt* ifstmt)
 
 	last->addInst(branch);
 
-	//´¦ÀíTrue·ÖÖ§
+	//å¤„ç†Trueåˆ†æ”¯
 	trueStart->pre_bbs_.push_back(now);
 	last = trueStart;
 	NStmt* trueStmt = &(ifstmt->true_statement);
@@ -334,7 +335,7 @@ void Function::getFromIf(NIfStmt* ifstmt)
 	}
 	else
 	{
-		//µ¥ÌõÖ¸ÁîÈÔÈ»ÒªĞÂ¿ªÒ»¸öblock·Å
+		//å•æ¡æŒ‡ä»¤ä»ç„¶è¦æ–°å¼€ä¸€ä¸ªblockæ”¾
 		trueStart->pre_bbs_.push_back(now);
 		NStmtList p;
 		p.push_back(trueStmt);
@@ -359,7 +360,7 @@ void Function::getFromIf(NIfStmt* ifstmt)
 		}
 		else
 		{
-			//µ¥ÌõÖ¸Áî
+			//å•æ¡æŒ‡ä»¤
 			NStmtList p;
 			p.push_back(trueStmt);
 			getFromStatment(p);
@@ -386,11 +387,11 @@ void Function::getFromIf(NIfStmt* ifstmt)
 void Function::getFromWhile(NWhileStmt* whileStmt)
 {
 	Instruction* condition = getInstFromExp(&whileStmt->condition);
-	Instruction* p = UnaryInst::createNot(condition, nullptr); //Ìõ¼şÎª¼ÙÊ±£¬pÎªÕæ£¬Ìøµ½outÖ´ĞĞ
-	BaseBlock* out = new BaseBlock();//while½áÊøºóÏÂÒ»¸öblock
-	BaseBlock* next = new BaseBlock();//whileÄÚÈİblock
-	Instruction* branch = BranchInst::createCondBr(p, out, nullptr, nullptr);//Âú×ãÌõ¼ş
-	Instruction* jmp = BranchInst::createBr(next, nullptr);//½áÊøºóÌø»Ø
+	Instruction* p = UnaryInst::createNot(condition, nullptr); //æ¡ä»¶ä¸ºå‡æ—¶ï¼Œpä¸ºçœŸï¼Œè·³åˆ°outæ‰§è¡Œ
+	BaseBlock* out = new BaseBlock();//whileç»“æŸåä¸‹ä¸€ä¸ªblock
+	BaseBlock* next = new BaseBlock();//whileå†…å®¹block
+	Instruction* branch = BranchInst::createCondBr(p, out, nullptr, nullptr);//æ»¡è¶³æ¡ä»¶
+	Instruction* jmp = BranchInst::createBr(next, nullptr);//ç»“æŸåè·³å›
 
 	last->succ_bbs_.push_back(next);
 	next->pre_bbs_.push_back(last);
@@ -408,7 +409,7 @@ void Function::getFromWhile(NWhileStmt* whileStmt)
 	}
 	else
 	{
-		//µ¥ÌõÖ¸Áî
+		//å•æ¡æŒ‡ä»¤
 		NStmtList p;
 		p.push_back(&whileStmt->statement);
 		getFromStatment(p);
@@ -480,6 +481,7 @@ void Function::getFromStatment(NStmtList stmtList)
 	BaseBlock* now =last;
 	now->parent = nullptr;
 	NStmt* stmt;
+	int frameAddressByWord = 0;
 	for (int i = 0; i < stmtList.size(); i++)
 	{
 		stmt = dynamic_cast<NStmt*>(stmtList[i]);
@@ -489,7 +491,9 @@ void Function::getFromStatment(NStmtList stmtList)
 		{
 			NReturnStmt* ret = dynamic_cast<NReturnStmt*>(stmt);
 			Instruction* instr = getInstFromExp(ret->return_value);
-			Instruction* retInstr = ReturnInst::createRet(instr, nullptr);
+			Instruction* retInstr = (ret->return_value == nullptr) ?
+				ReturnInst::createVoidRet(nullptr) :
+				ReturnInst::createRet(instr, nullptr);
 			last->addInst(retInstr);
 			break;
 		}
@@ -509,8 +513,7 @@ void Function::getFromStatment(NStmtList stmtList)
 					Instruction* instr = AllocaInst::createAlloca(new Type(intType));
 					Value* newVal = new Value(intType);
 					string name = dec->identifier.name;
-					parent->addAddress(newVal, parent->address);
-					parent->address += 1;
+					addressTable[newVal] = frameAddressByWord++;
 					last->addInst(instr);
 					addSymbol(name, newVal);
 					parent->addName(newVal, name);
@@ -524,8 +527,8 @@ void Function::getFromStatment(NStmtList stmtList)
 					{
 						v = new ConstantInt(0);
 					}
-					int address = this->parent->getAddress(newVal);
-					instr = StoreInst::createStore(v, address);		
+					int address = addressTable[newVal];
+					instr = new StoreInst(v, newVal, nullptr, MemInstrType::Frame);
 					last->addInst(instr);
 				}
 
@@ -535,9 +538,9 @@ void Function::getFromStatment(NStmtList stmtList)
 					Instruction* instr = AllocaInst::createAlloca(p, dec->size);
 					Value* newVal = new Value(p);
 					string name = dec->identifier.name;
-					parent->addAddress(newVal, parent->address);
-					parent->address += dec->size;
-					last->addInst(instr);
+					addressTable[newVal] = frameAddressByWord;
+					frameAddressByWord += dec->size;
+
 					addSymbol(name, newVal);
 					parent->addName(newVal, name);
 					if (dec->init)
@@ -547,8 +550,7 @@ void Function::getFromStatment(NStmtList stmtList)
 						{
 							int val = (*dec->finalInitValue)[i];
 							ConstantInt* constInt = new ConstantInt(val);
-							int address = this->parent->getAddress(newVal);
-							Instruction* instr = StoreInst::createStore(constInt, address+i);
+							auto instr = new StoreInst(constInt, newVal, new ConstantInt(i), MemInstrType::Frame);
 						}
 					}
 				}
@@ -570,12 +572,12 @@ void Function::getFromStatment(NStmtList stmtList)
 			break;
 		}
 		case 6:
-			//Ìø³öwhile£¬Ìøµ½WhileOutµÄÕ»¶¥µØÖ·
+			//è·³å‡ºwhileï¼Œè·³åˆ°WhileOutçš„æ ˆé¡¶åœ°å€
 		{
 			last->succ_bbs_.push_back(whileOut.top());
 			Instruction* p = BranchInst::createBr(whileOut.top(), last);
 			last->addInst(p);
-			goto breakcontinue; //berakºóĞøµÄÖ¸Áî²»¿ÉÄÜÖ´ĞĞÁË£¬¿ÉÒÔ²»¶ÁÈ¡Ö±½Ó½áÊø
+			goto breakcontinue; //berakåç»­çš„æŒ‡ä»¤ä¸å¯èƒ½æ‰§è¡Œäº†ï¼Œå¯ä»¥ä¸è¯»å–ç›´æ¥ç»“æŸ
 			break;
 		}
 		case 7:
@@ -583,18 +585,18 @@ void Function::getFromStatment(NStmtList stmtList)
 			NAssignStmt* assign = dynamic_cast<NAssignStmt*>(stmt);
 			string name = assign->name.name;
 			Value* var = findValue(name);
-			int address = parent->getAddress(var);
+			int address = addressTable[var];
 			if (var->isInt())
 			{
 				Instruction* rhs = getInstFromExp(&assign->rhs);
-				Instruction* store = StoreInst::createStore(rhs, address);
+				auto store = new StoreInst(rhs, var, nullptr, MemInstrType::Frame);
 				last->addInst(store);
 			}
 			
-			else //Êı×é¼°Ö¸Õë
+			else //æ•°ç»„åŠæŒ‡é’ˆ
 			{
 				IntList dim = (*assign->GetDimensions());
-				vector<int>mult;//¼ÇÂ¼Êı×é¸÷Î¬¶ÈµÄ³Ë»ı£¬·½±ã½«¸ßÎ¬·ÃÎÊ×ª»¯ÎªµÍÎ¬·ÃÎÊ
+				vector<int>mult;//è®°å½•æ•°ç»„å„ç»´åº¦çš„ä¹˜ç§¯ï¼Œæ–¹ä¾¿å°†é«˜ç»´è®¿é—®è½¬åŒ–ä¸ºä½ç»´è®¿é—®
 				int init = 1;
 				mult.push_back(init);
 				Instruction* rhs = getInstFromExp(&assign->rhs);
@@ -605,8 +607,8 @@ void Function::getFromStatment(NStmtList stmtList)
 					mult.push_back(init);
 				}
 
-				//Êı×é¶¨ÒåÎªa[3][2][2],·ÃÎÊa[2][1][1],×ª»¯Îªa[3*2*2]·ÃÎÊa[2*4+1*2+1*1]
-				//2*4+1*2+1*1ĞèÒª¶àÌõÖ¸ÁîÀ´¼ÆËã 
+				//æ•°ç»„å®šä¹‰ä¸ºa[3][2][2],è®¿é—®a[2][1][1],è½¬åŒ–ä¸ºa[3*2*2]è®¿é—®a[2*4+1*2+1*1]
+				//2*4+1*2+1*1éœ€è¦å¤šæ¡æŒ‡ä»¤æ¥è®¡ç®— 
 				vector<Instruction*> computeOffset;
 				int size = assign->lengths.size();
 				for (int i=0;i<size;i++)
@@ -617,8 +619,8 @@ void Function::getFromStatment(NStmtList stmtList)
 					computeOffset.push_back(instr);
 									
 				}
-				Instruction* instr = vectorInst::createVectorInst(computeOffset);
-				Instruction* store = StoreInst::createStore(rhs, address, (Value*)instr);
+				auto instr = computeOffset[0];
+				auto store = new StoreInst(rhs, var, instr, MemInstrType::Frame);
 				last->addInst(store);
 			}
 			break;
@@ -629,7 +631,7 @@ void Function::getFromStatment(NStmtList stmtList)
 			last->succ_bbs_.push_back(whileOut.top());
 			Instruction* p = BranchInst::createBr(whileOut.top(), last);
 			last->addInst(p);
-			goto breakcontinue; //berakºóĞøµÄÖ¸Áî²»¿ÉÄÜÖ´ĞĞÁË£¬¿ÉÒÔ²»¶ÁÈ¡Ö±½Ó½áÊø
+			goto breakcontinue; //berakåç»­çš„æŒ‡ä»¤ä¸å¯èƒ½æ‰§è¡Œäº†ï¼Œå¯ä»¥ä¸è¯»å–ç›´æ¥ç»“æŸ
 			break;		
 		}
 
@@ -701,13 +703,15 @@ void Function::addSymbol(string name, Value* val)
 	auto iter = symbolTable.find(name);
 	if (iter != symbolTable.end())
 	{
-		recoverTable.insert(make_pair(iter->first,iter->second));
+		recoverTable.insert(make_pair(iter->first, iter->second));
 		symbolTable.erase(iter);
 		symbolTable.insert(make_pair(name, val));
+		revSymbolTable[val] = name;
 	}
 	else
 	{
 		symbolTable.insert(make_pair(name, val));
+		revSymbolTable[val] = name;
 	}
 }
 
@@ -726,6 +730,20 @@ Value* Function::findValue(string name)
 		else return nullptr;
 	}
 }
+
+vector<int>* Function::getArrayParamDefine(string name)
+{
+	auto iter = arrayDefine.find(name);
+	if (iter != arrayDefine.end())
+		return &iter->second;
+	else return nullptr;
+}
+
+void Function::addArrayParamDefine(string name, vector<int> dim)
+{
+	arrayDefine.insert(make_pair(name, dim));
+}
+
 
 
 

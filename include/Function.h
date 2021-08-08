@@ -1,4 +1,7 @@
 #pragma once
+#include <sstream>
+#include <stack>
+#include <set>
 #include<list>
 #include<vector>
 #include<string>
@@ -14,6 +17,22 @@ class BaseBlock;
 class Module;
 class NExp;
 class Instruction;
+
+const int MaxParamsPassedByReg = 4;
+
+static std::string getTypeType(Type* type)
+{
+	if (type->tName == typeName::arrayType)
+	{
+		auto t = reinterpret_cast<ArrayType*>(type);
+		std::stringstream ss;
+		ss << getTypeStr(t->tName) + "[" + std::to_string(t->num) + "]";
+		if (t->ptr)
+			ss << "*";
+		return ss.str();
+	}
+	return getTypeStr(type->tName);
+}
 
 class Function :public User
 {
@@ -51,6 +70,10 @@ public:
 	{
 		this->parent = p;
 	}
+	std::vector<BaseBlock*> getAllBlocks();
+	void linearizeInstrTrees();
+	vector<int>* getArrayParamDefine(string name);
+	void addArrayParamDefine(string name, vector<int> dim);
 
 	map<string, Value*> symbolTable;
 	map<string, Value*> recoverTable;
@@ -58,4 +81,15 @@ public:
 	BaseBlock* entry;
 	BaseBlock* last;
 	Module* parent;
+	std::vector<BaseBlock*> blocks;
+	std::map<Value*, std::string> revSymbolTable;
+
+	std::map<Value*, int> addressTable;
+	
+	std::map<string, vector<int>> arrayDefine;
+
+
+	std::vector<Value*> params;
+	std::set<Value*> paramSet;
+	int nTempVars;
 };

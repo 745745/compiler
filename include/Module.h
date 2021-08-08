@@ -53,20 +53,11 @@ public:
 	static void addName(Value* val,string name);
 	static string getName(Value*);
 
-	void addAddress(Value* p, int add) { addressTable.insert(make_pair(p, add)); };
-
-	int getAddress(Value* p) 
-	{ 
-		auto iter = addressTable.find(p);
-		if (iter != addressTable.end())
-			return iter->second;
-		else return 0;
-	}
-	int address = 0;
+	
 private:
+	std::set<Value*> globalSet;
 	map<string, Value*>globalVar;
 	static vector<Function*> funcList;
 	map<Value*, ConstantValue*> valueTable;
-	map<Value*, int> addressTable;
 	static map<Value*, string> nameTable;
 };

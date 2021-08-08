@@ -86,7 +86,8 @@ public:
 	static SymbolTable symboltb;
 	Node* parent;
 	int scope = 0;
-
+	virtual void Expand(IntList* dimensionLength, int index, int size) {}
+	int elem_size = 1;
 public:
 	virtual ~Node() {}
 
@@ -198,6 +199,20 @@ public:
 		return endindex;
 	}
 
+	void Expand(IntList* dimensionLength, int index, int size)
+	{
+		this->elem_size = 0;
+		int length = index == 0 ? size : size / (*(dimensionLength->begin() + index - 1));
+		for (auto NInit : NInitList)
+		{
+			NInit->Expand(dimensionLength, index + 1, length);
+			this->elem_size += NInit->elem_size;
+		}
+		this->NInitList.insert(this->NInitList.end(), length - this->elem_size, new NInteger(0));
+		this->elem_size = length;
+	}
+
+
 	void SetParentAndScope(Node* parent, int scope)
 	{
 		this->parent = parent;
@@ -212,6 +227,7 @@ public:
 class NVarDecl : public NDecl
 {
 public:
+	bool is_para = false;
 	bool isconst = false;
 	string type = "int";
 	bool init = true;
@@ -248,12 +264,14 @@ public:
 	{
 		init = false;
 		this->is_array = false;
+		this->is_para = true;
 	}
 	NVarDecl(const string& type, NIdentifier& identifier, NExpList& lengths) : type(type), identifier(identifier), lengths(lengths)
 	{
 		init = false;
 		initvalue = NULL;
 		this->is_array = true;
+		this->is_para = true;
 	}
 
 	void setTypeforConst()
@@ -289,9 +307,12 @@ public:
 			// 对数组的初始化列表进行调整;
 			if (this->init)
 			{
-				this->finalInitValue = new IntList(this->size, 0);
-				int index = 0;
-				this->initvalue->ExpandInitList(finalInitValue, index, this->dimensionLength->back());
+				// this->finalInitValue = new IntList(this->size, 0);
+				// int index = 0;
+				// this->initvalue->ExpandInitList(finalInitValue, index, this->dimensionLength->back());
+
+				// 2021-8-8 数组初始值展开为exp
+				this->initvalue->Expand(this->dimensionLength, 0, this->size);
 			}
 		}
 	}
@@ -466,7 +487,17 @@ public:
 	IntList* GetDimensions()
 	{
 		IntList* dimensions = new IntList();
-		if (lengths.size() != 0)
+		// 该数组对应的是当前函数的形参，此时返回-1
+
+		Symbol* sym = this->symboltb.GetSymbol(this->name, this->scope);
+		if (sym->parent->is_array && sym->parent->is_para)
+		{
+			// 为形参数组
+			dimensions->push_back(-1);
+			return dimensions;
+		}
+
+		else if (lengths.size() != 0)
 		{
 			// array
 			return this->symboltb.GetSymbol(this->name, this->scope)->parent->dimensionLength;
@@ -592,7 +623,17 @@ public:
 	IntList* GetDimensions()
 	{
 		IntList* dimensions = new IntList();
-		if (array_def.size() != 0)
+		// 该数组对应的是当前函数的形参，此时返回-1
+
+		Symbol* sym = this->symboltb.GetSymbol(this->name, this->scope);
+		if (sym->parent->is_array && sym->parent->is_para)
+		{
+			// 为形参数组
+			dimensions->push_back(-1);
+			return dimensions;
+		}
+
+		else if (array_def.size() != 0)
 		{
 			// array
 			return this->symboltb.GetSymbol(this->name, this->scope)->parent->dimensionLength;

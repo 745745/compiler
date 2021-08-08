@@ -20,12 +20,9 @@ void makePredefinedFunc()
 
 
 
-
-
-
-
 void Module::ASTTranslate(NCompUnit* cu)
 {
+	makePredefinedFunc();
 	vector<NDecl*> decl=cu->declarations;
 	for (int i = 0; i < decl.size(); i++)
 	{
@@ -47,6 +44,9 @@ void Module::ASTTranslate(NCompUnit* cu)
 
 			vector<Type*>arg;
 			vector<std::string> paraName;
+			vector<vector<int>> arraydefine;
+			vector<string> arrayName;
+			int num = 0;
 			NVarDeclList para = p->parameters;
 			for (auto decl : para)
 			{
@@ -58,14 +58,28 @@ void Module::ASTTranslate(NCompUnit* cu)
 				}
 				else
 				{
-					//a[]的情况，数组长度为0
-					if (decl->size < 0)
-						decl->size = 0;
-					Type* paraType = new ArrayType(decl->size);
+					//a[]的情况，数组长度为0	
+					vector<int> def;
+					int arrStride = 1;
+					def.push_back(arrStride);
+					arrayName.push_back(decl->identifier.name);
+					for (auto i : decl->lengths)
+					{
+						arrStride *= i->GetValue();
+						def.push_back(i->GetValue());
+					}
+					arraydefine.push_back(def);
+					Type* paraType = new ArrayType(arrStride);
 					arg.push_back(paraType);
+					num++;
 				}
 			}
 			Function* func = Function::makeFunction(t, arg,paraName);
+			for (int i = 0; i < num; i++)
+			{
+				func->addArrayParamDefine(arrayName[i], arraydefine[i]);
+			}
+
 			func->setName(name);
 			func->setParent(this);
 			
@@ -82,25 +96,23 @@ void Module::ASTTranslate(NCompUnit* cu)
 			{
 				Value* val = new Value(intType);
 				
-				addAddress(val, address);
-				address += 1;
 				addGlobalVar(name,val);
+				addName(val, name);
 				if (p->init == true) //if init,add value to map
 				{
 					int intVal = p->initvalue->GetValue();
 					ConstantInt* constInt = new ConstantInt(intVal);
 					addConstantValue(val, constInt);
+					nameTable[constInt] = name;
 					val->isConstant = true;
 				}
 			}
 
 			else //int array
 			{
-				Type* type = new ArrayType(p->lengths.size());
+				Type* type = new ArrayType(p->lengths[0]->GetValue());
 				Value* val = new Value(type);
 
-				addAddress(val, address);
-				address += ((p->lengths[0])->GetValue());
 				addGlobalVar(name,val);
 
 				if (p->init == true)
@@ -113,6 +125,7 @@ void Module::ASTTranslate(NCompUnit* cu)
 					}
 					ConstantArray* array = new ConstantArray(arrayValue);
 					addConstantValue(val, array);
+					nameTable[array] = name;
 					val->isConstant = true;
 				}
 			}

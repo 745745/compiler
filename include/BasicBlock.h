@@ -24,8 +24,8 @@ public:
 		While,
 	};
 
-	void addInst(Instruction* inst) { insrList.push_back(inst); };
-
+	void addInst(Instruction* inst);
+	void linearizeInstrs();
 	BlockType blockType;
 	BaseBlock* parent; 
 	Function* func;

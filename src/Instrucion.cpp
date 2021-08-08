@@ -1,72 +1,82 @@
 #include"../include/Instruction.h"
 
+#include <sstream>
+
+std::string Instruction::argToStr(Value* arg)
+{
+	if (arg == nullptr) return "";
+
+	const auto& paramSet = parent->func->paramSet;
+	auto& symTable = parent->func->revSymbolTable;
+
+	if (arg->isArray())
+	{
+		if (paramSet.find(arg) != paramSet.end())
+			return "&[]" + Module::getName(arg);
+
+		if (symTable[arg] != "")
+			return "&[]" + symTable[arg];
+
+		return "~[]" + Module::getName(arg);
+
+		// auto globalVal = parent->func->parent->getConstantValue(arg);
+		// if (globalVal != nullptr)
+		// 	return "~[]" + Module::getName(globalVal);
+
+		// return "[]??";
+	}
+	if (arg->isInt())
+	{
+		auto v = dynamic_cast<ConstantInt*>(arg);
+		if (v != nullptr)
+			return "#" + std::to_string(v->value);
+
+		if (paramSet.find(arg) != paramSet.end())
+			return "&" + Module::getName(arg);
+
+		if (symTable[arg] != "")
+			return "&" + symTable[arg];
+
+		return "~" + Module::getName(arg);
+		// auto globalVal = parent->func->parent->getConstantValue(arg);
+		// if (globalVal != nullptr)
+		// 	return "~" + Module::getName(globalVal);
+
+		// return "#??";
+	}
+	if (arg->isInstr())
+	{
+		auto ins = dynamic_cast<Instruction*>(arg);
+		if (ins->id == Instruction::Constant)
+		{
+			return ins->argToStr(ins->args[0]);
+		}
+		return "%" + std::to_string(ins->number);
+	}
+	if (typeid(*arg) == typeid(Function))
+	{
+		auto f = dynamic_cast<Function*>(arg);
+		return "@" + f->name;
+	}
+	if (typeid(*arg) == typeid(BaseBlock))
+	{
+		std::stringstream ss;
+		ss << arg;
+		return ss.str();
+	}
+	return "???";
+}
+
 void Instruction::debugPrint()
 {
-	cout << "		";
-	cout << name.at(id) << " ";
-	cout <<"arg Num:"<< args.size() << " ";
-	for (Value* arg : args)
-	{
-		if (arg->isArray())
-		{
-			cout << "array: ";
-			if (arg->isConstant)
-			{
-				ConstantArray* constantArray = dynamic_cast<ConstantArray*>(arg);
-				for (int i = 0; i < constantArray->value.size(); i++)
-				{
-					cout << constantArray->value[i] << " ";
-				}
-			}
-			else
-			{
-				string name = Module::getName(arg);
-				if (name.size() != 0)
-					cout << name<<"  ";
-				else cout << "no init ";
-			}
-			cout <<"	";
-		}
-		else if (arg->isInt())
-		{
-			cout << "int: ";
-			if (arg->isConstant)
-			{
-				ConstantInt* constantInt = dynamic_cast<ConstantInt*>(arg);
-				if(constantInt!=nullptr)
-					cout << constantInt->value<<"	";
-				else
-				{
-					ConstInst* p = dynamic_cast<ConstInst*>(arg);
-					cout << ((ConstantInt*)p->args[0])->value<<"  ";
-				}
-			}
-			else
-			{
-				string name = Module::getName(arg);
-				if (name.size() != 0)
-					cout << name<<"  ";
-				else cout << "no init ";
-			}
-			cout << "	";
-		}
-		else if(arg->isInstr())
-		{
-			Instruction* instruction = dynamic_cast<Instruction*>(arg);
-			if (instruction->isconst == true)
-			{
-				cout << "int:" << ((ConstantInt*)instruction->args[0])->value<<"	";
-				continue;
-			}
-			cout << endl;
-			cout << "Instruction: ";
-			instruction->debugPrint();
-			cout << "	";
-		}
-		else
-		{
-			cout << "Block or something";
-		}
+	std::cout << "\t" << getOpStr() << "\t";
+	if (typeid(*this) != typeid(StoreInst) &&
+		typeid(*this) != typeid(ReturnInst) &&
+		typeid(*this) != typeid(BranchInst))
+		std::cout << argToStr(this) << ", ";
 
-	}
+	for (auto arg : args)
+		std::cout << argToStr(arg) << " ";
+
+	std::cout << "\n";
 }

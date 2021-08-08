@@ -1,6 +1,7 @@
 #pragma once
 
 #include<vector>
+#include<string>
 using std::vector;
 enum typeName
 {
@@ -11,6 +12,18 @@ enum typeName
 	ptrType,
 	instrType
 };
+
+const std::string TypeStr[] =
+{
+	"Void", "Int", "Func", "Arr", "Ptr", "Instr"
+};
+
+static std::string getTypeStr(typeName type)
+{
+	return TypeStr[type];
+}
+
+
 
 class Type
 {
@@ -39,7 +52,11 @@ public:
 class ArrayType :public Type
 {
 public:
-	explicit ArrayType(int num):num(num), Type(arrayType) { tName = arrayType;  };
+	explicit ArrayType(int num, bool ptr = false) :
+		num(num), ptr(ptr), Type(arrayType) {
+		tName = arrayType;
+	};
+	bool ptr;
 	int num;
 };
 
