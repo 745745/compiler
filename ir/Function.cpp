@@ -8,7 +8,7 @@ SymbolTable Node::symboltb;
 stack<BaseBlock*> whileIn;
 stack<BaseBlock*> whileOut;
 
-
+extern std::vector<std::string> t;
 bool isReturnStmt(NStmt* p)
 {
 	if (dynamic_cast<NReturnStmt*>(p) == nullptr)
@@ -43,6 +43,11 @@ bool isWhileStmt(NStmt* p)
 		return false;
 	}
 	else return true;
+}
+
+bool isExpStmt(NStmt *p)
+{
+	return dynamic_cast<NExpStmt*>(p) != nullptr;
 }
 
 bool isBlockStmt(NStmt* p)
@@ -164,6 +169,15 @@ Instruction::OpID getOpId(int op)
 	}
 }
 
+// bool isPreDefinedFunc(string name)
+// {
+// 	for (auto i : t)
+// 	{
+// 		if (name == i)
+// 			return true;
+// 	}
+// 	return false;
+// }
 
 int judgeExp(NExp* exp)
 {
@@ -189,13 +203,17 @@ Instruction* Function::getInstFromExp(NExp* p)
 		string name = ident->name.name;
 		if (ident->array_def.size() != 0)//array
 		{
-			IntList dim = *(ident->GetDimensions());
-			vector<int>mult;//��¼�����ά�ȵĳ˻������㽫��ά����ת��Ϊ��ά����
+			IntList *dim = getArrayParamDefine(name);
+			if (dim == nullptr)
+				dim = ident->GetDimensions();
+
+			std::vector<int> mult;
+			
 			int init = 1;
 			mult.push_back(init);
-			for (int i = 1; i < dim.size(); i++)
+			for (int i = 1; i < dim->size(); i++)
 			{
-				init *= dim[i];
+				init *= (*dim)[i];
 				mult.push_back(init);
 			}
 
@@ -210,16 +228,17 @@ Instruction* Function::getInstFromExp(NExp* p)
 				Instruction* instr = BinaryInst::createMul(val1, val2,last);
 				computeOffset.push_back(instr);
 			}
-			//Instruction* instr = VectorInst::createVectorInst(computeOffset);
-			auto instr = computeOffset[0];
+
+			auto val = findValue(name);
+			auto instr = new LoadInst(val, computeOffset[0], MemType::FrameLocal);
 			return instr;
 		}
 		else //int
 		{
 			Value* val = findValue(name);
-			int address = addressTable[val];
+			//int address = addressTable[val];
 			//Instruction* instr = LoadInst::createLoad(address);
-			auto instr = new LoadInst(val, nullptr, MemInstrType::Frame);
+			auto instr = new LoadInst(val, nullptr, MemType::FrameLocal);
 			return instr;
 		}
 	}
@@ -279,101 +298,127 @@ void Function::getFromIf(NIfStmt* ifstmt)
 	Instruction* instr = getInstFromExp(&ifstmt->condition);	
 	BaseBlock* now = last;
 	BaseBlock* next = new BaseBlock();
+	
 
-	BaseBlock* F = new BaseBlock();
+	BaseBlock* trueLast;
+	BaseBlock* falseLast;
+	BaseBlock* falseStart;
+	BaseBlock* trueStart=new BaseBlock;
+
+	last->succ_bbs_.push_back(trueStart);
+	last->succ_bbs_.push_back(next);
+
 	bool False = (ifstmt->false_statement != nullptr);
-	if (False) //False����
+	Instruction* branch;
+	if (False) //False存在
 	{
-		last->succ_bbs_.push_back(F);
-		F->succ_bbs_.push_back(next);
-		F->pre_bbs_.push_back(last);
+		falseStart = new BaseBlock();
+		last->succ_bbs_[1] = falseStart;
+		branch = BranchInst::createCondBr(instr, trueStart, falseStart,nullptr);
 	}
-	//����True��֧
+	else branch = BranchInst::createCondBr(instr, trueStart, next, nullptr);
+
+	last->addInst(branch);
+
+	//处理True分支
+	trueStart->pre_bbs_.push_back(now);
+	last = trueStart;
 	NStmt* trueStmt = &(ifstmt->true_statement);
 	NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
 	if (b!=nullptr)
 	{
 		getFromBlock(b);
-		last = last->pre_bbs_[0];
 		last->succ_bbs_.push_back(next);
+		trueLast = last;
 	}
 	else
 	{
-		//����ָ��
+		//单条指令仍然要新开一个block放
+		trueStart->pre_bbs_.push_back(now);
 		NStmtList p;
 		p.push_back(trueStmt);
 		getFromStatment(p);
+		trueStart->succ_bbs_.push_back(next);
+		trueLast = last;
 	}
 
 	RecoverSymBol();
 
 	if (False)
 	{
-		last = F;
+		falseStart->pre_bbs_.push_back(now);
+		last = falseStart;
 		NStmt* trueStmt = ifstmt->false_statement;
 		NBlockStmt* b = dynamic_cast<NBlockStmt*>(trueStmt);
 		if (b != nullptr)
 		{
 			getFromBlock(b);
-			last = last->pre_bbs_[0];
 			last->succ_bbs_.push_back(next);
+			falseLast = last;
 		}
 		else
 		{
-			//����ָ��
+			//单条指令
 			NStmtList p;
 			p.push_back(trueStmt);
 			getFromStatment(p);
+			falseStart->succ_bbs_.push_back(next);
+			falseLast = last;
 		}
 		RecoverSymBol();
 		
 	}
-	last = last->pre_bbs_[0];
+
 	if (False)
 	{
-		next->pre_bbs_.push_back(last->succ_bbs_[0]);
-		next->pre_bbs_.push_back(last->succ_bbs_[1]);
+		next->pre_bbs_.push_back(trueLast);
+		next->pre_bbs_.push_back(falseStart);
 	}
 	else
 	{
-		next->pre_bbs_.push_back(last->succ_bbs_[0]);
-		next->pre_bbs_.push_back(last);
+		next->pre_bbs_.push_back(trueLast);
+		next->pre_bbs_.push_back(now);
 	}
-
-	Instruction* ifBranch;
-	if (False)
-	{
-		ifBranch = BranchInst::createCondBr(instr, last->succ_bbs_[0], last->succ_bbs_[1], nullptr);
-	}
-	else ifBranch = BranchInst::createCondBr(instr, last->succ_bbs_[0], nullptr, nullptr);
-	last->addInst(ifBranch);
 	last = next;
 }
 
 void Function::getFromWhile(NWhileStmt* whileStmt)
 {
-	BaseBlock* out = new BaseBlock();//while��������һ��block
-	whileIn.push(last);
+	Instruction* condition = getInstFromExp(&whileStmt->condition);
+	Instruction* p = UnaryInst::createNot(condition, nullptr); //条件为假时，p为真，跳到out执行
+	BaseBlock* out = new BaseBlock();//while结束后下一个block
+	BaseBlock* next = new BaseBlock();//while内容block
+	Instruction* branch = BranchInst::createCondBr(p, out, nullptr, nullptr);//满足条件
+	Instruction* jmp = BranchInst::createBr(next, nullptr);//结束后跳回
+
+	last->succ_bbs_.push_back(next);
+	next->pre_bbs_.push_back(last);
+	next->addInst(branch);
+	last = next;
+	whileIn.push(next);
 	whileOut.push(out);
 	NBlockStmt* b = dynamic_cast<NBlockStmt*>(&whileStmt->statement);
 	if (b != nullptr)
 	{
 		getFromBlock(b);
-		last = last->pre_bbs_[0];
-		last->succ_bbs_.push_back(out);
+		last->succ_bbs_.push_back(whileIn.top());
+		last->addInst(jmp);
+		
 	}
 	else
 	{
-		//����ָ��
+		//单条指令
 		NStmtList p;
 		p.push_back(&whileStmt->statement);
 		getFromStatment(p);
+		last->succ_bbs_.push_back(whileIn.top());
+		last->addInst(jmp);
+		out->pre_bbs_.push_back(whileIn.top());
 	}
 
 	RecoverSymBol();
 	last = out;
 }
-
 
 void Function::getFromBlock(NBlockStmt* block)
 {
@@ -388,14 +433,20 @@ void Function::getFromBlock(NBlockStmt* block)
 		last = p;
 	}
 	getFromStatment(block->block);
+	RecoverSymBol();
 	BaseBlock* next;
 	if (last->insrList.size() == 0)
+	{
 		next = last;
-	else next = new BaseBlock();
-	BaseBlock* now = last;
-	RecoverSymBol();
+	}
+	else
+	{
+		next = new BaseBlock();
+		last->succ_bbs_.push_back(next);
+		next->pre_bbs_.push_back(last);
+	}
+	
 	last = next;
-	next->pre_bbs_.push_back(now);
 }
 
 
@@ -418,6 +469,8 @@ int judgeStmt(NStmt* p)
 		return 7;
 	if (iscontinueStmt(p))
 		return 8;
+	if (isExpStmt(p))
+		return 9;
 }
 
 void Function::getFromStatment(NStmtList stmtList)
@@ -426,7 +479,6 @@ void Function::getFromStatment(NStmtList stmtList)
 	now->parent = nullptr;
 	NStmt* stmt;
 
-	int frameAddressByWord = 0;
 	for (int i = 0; i < stmtList.size(); i++)
 	{
 		stmt = dynamic_cast<NStmt*>(stmtList[i]);
@@ -461,10 +513,9 @@ void Function::getFromStatment(NStmtList stmtList)
 					Value* newVal = new Value(intType);
 					string name = dec->identifier.name;
 
-					//parent->addAddress(newVal, parent->address);
-					//parent->address += 1;
-
-					addressTable[newVal] = frameAddressByWord++;
+					addressTable[newVal] = frameAddressByByte;
+					frameAddressByByte += 4;
+					localVars.push_back(newVal);
 					//last->addInst(instr);
 					addSymbol(name, newVal);
 					parent->addName(newVal, name);
@@ -477,11 +528,8 @@ void Function::getFromStatment(NStmtList stmtList)
 					else
 					{
 						v = new ConstantInt(0);
-					}
-					//int address = this->parent->getAddress(newVal);
-					int address = addressTable[newVal];
-					//instr = StoreInst::createStore(v, address);		
-					instr = new StoreInst(v, newVal, nullptr, MemInstrType::Frame);
+					}	
+					instr = new StoreInst(v, newVal, nullptr, MemType::FrameLocal);
 					last->addInst(instr);
 				}
 				else //array
@@ -491,13 +539,10 @@ void Function::getFromStatment(NStmtList stmtList)
 					Value* newVal = new Value(p);
 					string name = dec->identifier.name;
 
-					//parent->addAddress(newVal, parent->address);
-					//parent->address += dec->size;
+					addressTable[newVal] = frameAddressByByte;
+					frameAddressByByte += dec->size * 4;
+					localVars.push_back(newVal);
 
-					addressTable[newVal] = frameAddressByWord;
-					frameAddressByWord += dec->size;
-
-					//last->addInst(instr);
 					addSymbol(name, newVal);
 					parent->addName(newVal, name);
 					if (dec->init)
@@ -508,11 +553,8 @@ void Function::getFromStatment(NStmtList stmtList)
 						{
 							int val = (*dec->finalInitValue)[i];
 							ConstantInt* constInt = new ConstantInt(val);
-							//int address = this->parent->getAddress(newVal);
-							//Instruction* instr = StoreInst::createStore(constInt, address + i);
 
-							// TODO
-							auto instr = new StoreInst(constInt, newVal, new ConstantInt(i), MemInstrType::Frame);
+							auto instr = new StoreInst(constInt, newVal, new ConstantInt(i), MemType::FrameLocal);
 						}
 					}
 				}
@@ -537,9 +579,9 @@ void Function::getFromStatment(NStmtList stmtList)
 			//����while������WhileOut��ջ����ַ
 		{
 			last->succ_bbs_.push_back(whileOut.top());
-			Instruction* p = BranchInst::createBr(whileOut.top(), last);
+			Instruction *p = BranchInst::createBr(whileOut.top(), last);
 			last->addInst(p);
-			last = new BaseBlock();
+			goto breakcontinue; //berak后续的指令不可能执行了，可以不读取直接结束
 			break;
 		}
 		case 7:
@@ -553,7 +595,7 @@ void Function::getFromStatment(NStmtList stmtList)
 			{
 				Instruction* rhs = getInstFromExp(&assign->rhs);
 				//Instruction* store = StoreInst::createStore(rhs, address);
-				auto store = new StoreInst(rhs, var, nullptr, MemInstrType::Frame);
+				auto store = new StoreInst(rhs, var, nullptr, MemType::FrameLocal);
 				last->addInst(store);
 			}
 			else //���鼰ָ��
@@ -584,22 +626,27 @@ void Function::getFromStatment(NStmtList stmtList)
 				auto instr = computeOffset[0];
 				//Instruction* instr = VectorInst::createVectorInst(computeOffset);
 				//Instruction* store = StoreInst::createStore(rhs, address, (Value*)instr);
-				auto store = new StoreInst(rhs, var, instr, MemInstrType::Frame);
+				auto store = new StoreInst(rhs, var, instr, MemType::FrameLocal);
 				last->addInst(store);
 			}
 			break;
 			
 		}
-		case 8:
+		case 8:			
 		{
-			last->succ_bbs_.push_back(whileIn.top());
-			Instruction* p = BranchInst::createBr(whileIn.top(), last);
-			last = new BaseBlock();
-			break;
+			last->succ_bbs_.push_back(whileOut.top());
+			Instruction* p = BranchInst::createBr(whileOut.top(), last);
+			last->addInst(p);
+			goto breakcontinue; //berak后续的指令不可能执行了，可以不读取直接结束
+			break;		
 		}
+		
+
 		default:	break;
 		}
 	}
+breakcontinue:
+	localDataSizeByByte = frameAddressByByte;
 	blocks = getAllBlocks();
 	linearizeInstrTrees();
 }
@@ -620,8 +667,7 @@ Function* Function::makeFunction(Type* returnVal, vector<Type*>arg, vector<std::
 			Value* val = new Value(type);
 			p->addSymbol(paraName[i], val);
 			Module::addName(val, paraName[i]);
-			p->params.push_back(val);
-			p->paramSet.insert(val);
+			p->paramSet[val] = i;
 		}
 		else
 		{
@@ -629,8 +675,7 @@ Function* Function::makeFunction(Type* returnVal, vector<Type*>arg, vector<std::
 			Value* val = new Value(type);
 			p->addSymbol(paraName[i], val);
 			Module::addName(val, paraName[i]);
-			p->params.push_back(val);
-			p->paramSet.insert(val);
+			p->paramSet[val] = i;
 		}
 	}
 	return p;
@@ -691,6 +736,19 @@ Value* Function::findValue(string name)
 	}
 }
 
+vector<int>* Function::getArrayParamDefine(string name)
+{
+	auto iter = arrayDefine.find(name);
+	if (iter != arrayDefine.end())
+		return &iter->second;
+	else return nullptr;
+}
+
+void Function::addArrayParamDefine(string name, vector<int> dim)
+{
+	arrayDefine.insert(make_pair(name, dim));
+}
+
 void Function::debugPrint()
 {
 	std::cout << "[Function " << name << ", retType ";
@@ -698,7 +756,7 @@ void Function::debugPrint()
 	std::cout << getTypeStr(tp->returnType->tName) << "]\n";
 
 	std::cout << "    [Parameters]\n";
-	for (auto param : params)
+	for (auto [param, id] : paramSet)
 	{
 		std::cout << "\t[" << getTypeType(param->type) << " " << Module::getName(param) << "]\n";
 	}
@@ -709,7 +767,7 @@ void Function::debugPrint()
 		std::cout << "\t[" << getTypeType(val->type) << " " << name << "]\n";
 	}
 
-	std::cout << "    [Entry " << entry << "]\n";
+	std::cout << "    [Entry " << entry->idx << "]\n";
 
 	for (auto b : blocks)
 		b->debugPrint();
@@ -722,6 +780,7 @@ std::vector<BaseBlock*> Function::getAllBlocks()
 	std::stack<BaseBlock*> st;
 	std::set<BaseBlock*> vis;
 	std::vector<BaseBlock*> ret;
+	int blockId = 0;
 
 	st.push(entry);
 	while (!st.empty())
@@ -731,6 +790,7 @@ std::vector<BaseBlock*> Function::getAllBlocks()
 		vis.insert(b);
 		ret.push_back(b);
 		b->func = this;
+		b->idx = blockId++;
 
 		for (auto s : b->succ_bbs_)
 		{
@@ -754,10 +814,10 @@ void Function::linearizeInstrTrees()
 			ins->number = line;
 			if (typeid(*ins) != typeid(StoreInst) &&
 				typeid(*ins) != typeid(ReturnInst) &&
-				typeid(*ins) != typeid(BranchInst))
+				typeid(*ins) != typeid(BranchInst) &&
+				typeid(*ins) != typeid(ConstInst))
 				line++;
 		}
 	}
 	nTempVars = line + 1;
 }
-

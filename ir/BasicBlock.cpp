@@ -16,7 +16,7 @@ void BaseBlock::addInst(Instruction *inst)
 
 void BaseBlock::debugPrint()
 {
-	std::cout << "    [Block " << this << ", type " << BlockTypeStr[blockType] << "]\n";
+	std::cout << "    [Block " << idx << ", type " << BlockTypeStr[blockType] << "]\n";
 	for (auto inst : insrList)
 	{
 		if (inst->id != Instruction::Constant)
@@ -56,4 +56,41 @@ void BaseBlock::linearizeInstrs()
 		newInstrList.insert(newInstrList.end(), expInstrs.rbegin(), expInstrs.rend());
 	}
 	insrList = newInstrList;
+
+	// std::vector<Instruction *> newInstrList;
+
+	// std::set<Instruction *> vis;
+	// std::stack<Instruction *> st;
+
+	// for (auto instr : insrList)
+	// {
+	// 	std::vector<Instruction *> expInstrs;
+
+	// 	st.push(instr);
+	// 	while (!st.empty())
+	// 	{
+	// 		auto ins = st.top();
+	// 		if (vis.find(ins) != vis.end())
+	// 		{
+	// 			st.pop();
+	// 			if (ins == nullptr)
+	// 				continue;
+	// 			ins->parent = this;
+	// 			expInstrs.push_back(ins);
+	// 			continue;
+	// 		}
+	// 		vis.insert(ins);
+	// 		for (auto arg : ins->args)
+	// 		{
+	// 			auto a = dynamic_cast<Instruction *>(arg);
+	// 			if (a == nullptr)
+	// 				continue;
+	// 			if (vis.find(a) == vis.end())
+	// 				st.push(a);
+	// 		}
+	// 	}
+	// 	//newInstrList.insert(newInstrList.end(), expInstrs.rbegin(), expInstrs.rend());
+	// 	newInstrList.insert(newInstrList.end(), expInstrs.begin(), expInstrs.end());
+	// }
+	// insrList = newInstrList;
 }

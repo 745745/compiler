@@ -273,7 +273,7 @@ namespace Assembly
         return getFuncFullCode() + "\t" + addrStr;
     }
 
-    MonoMemInstr::MonoMemInstr(Register rd, Register rn, Imm12u offset, Type type, AutoIncType inc) :
+    MonoMemInstr::MonoMemInstr(Register rd, Register rn, Imm12 offset, Type type, AutoIncType inc) :
         rd(rd), rn(rn), offset(offset), inc(inc), AsmInstruction(InstrType(type))
     {
         if (inc == AutoIncType::Da || inc == AutoIncType::Db)
@@ -293,10 +293,13 @@ namespace Assembly
 
     std::string MonoMemInstr::toString() const
     {
+        if (offset.index() == 2)
+            return getFuncFullCode() + "\t" + rn.toString() + ", =" + std::get<2>(offset);
         // TODO:
         // 符号问题
         std::string code;
         code += getFuncFullCode() + "\t" + rn.toString() + ", [" + rd.toString();
+
         std::string offStr = (offset.index() == 1) ?
             std::get<1>(offset).toString() :
             std::get<0>(offset).toString();

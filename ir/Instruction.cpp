@@ -4,7 +4,7 @@
 
 std::string Instruction::argToStr(Value *arg)
 {
-	if (arg == nullptr) return "";
+	if (arg == nullptr) return "_";
 
 	const auto &paramSet = parent->func->paramSet;
 	auto &symTable = parent->func->revSymbolTable;
@@ -61,7 +61,8 @@ std::string Instruction::argToStr(Value *arg)
 	if (typeid(*arg) == typeid(BaseBlock))
 	{
 		std::stringstream ss;
-		ss << arg;
+		ss << "{Block ";
+		ss << dynamic_cast<BaseBlock*>(arg)->idx << "}";
 		return ss.str();
 	}
 	return "???";

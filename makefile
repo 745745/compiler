@@ -1,3 +1,4 @@
+# 定义编译命令变量
 CC := clang++
 
 targetAll := compiler

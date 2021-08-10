@@ -13,9 +13,9 @@ class BaseBlock;
 class Function;
 class ConstantInt;
 
-enum class MemInstrType
+enum class MemType
 {
-	FuncParam, Frame, Global
+	FuncParam, FrameLocal, Global, CalleeParam
 };
 
 const std::string OpStr[] =
@@ -108,14 +108,14 @@ public:
 class StoreInst :public Instruction
 {
 public:
-	StoreInst(Value *save, Value *base, Value *offset, MemInstrType storeType) :
+	StoreInst(Value *save, Value *base, Value *offset, MemType storeType) :
 		storeType(storeType)
 	{
 		id = Instruction::Store;
 		args = { save, base, offset };
 	}
 
-	MemInstrType storeType;
+	MemType storeType;
 };
 
 //arg第一个是地址，第二个是偏移量
@@ -131,14 +131,14 @@ public:
 	// base = arrVal, offset = offsetVal / constInt
 	// FuncParam:
 	// base = paramVal, offset = nullptr
-	LoadInst(Value *base, Value *offset, MemInstrType loadType) :
+	LoadInst(Value *base, Value *offset, MemType loadType) :
 		loadType(loadType)
 	{
 		id = Instruction::Load;
 		args = { base, offset };
 	}
 
-	MemInstrType loadType;
+	MemType loadType;
 
 public:
 	// static LoadInst* createLoad(int address)

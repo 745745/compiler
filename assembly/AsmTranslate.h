@@ -78,26 +78,64 @@ namespace Assembly
     {
     public:
         FuncBlock() = default;
-        FuncBlock(const std::string &name, AssemblyType asmType, int align = 2) :
-            name(name), asmType(asmType), align(align) {}
+        FuncBlock(Function *func, AssemblyType asmType, int align = 2) :
+            func(func), asmType(asmType), align(align) {}
 
         template <typename T, typename... Args>
-        void append(Args &&...args) { body.push_back(std::make_shared<T>(args...)); }
+        void append(Args &&...args) { lines.push_back(std::make_shared<T>(args...)); }
 
-        std::vector<LinePtr> genHead();
-        std::vector<LinePtr> toLines();
+        template <typename T>
+        void append(std::shared_ptr<T> line) { lines.push_back(line); }
+
+        void generate();
+        void genHead();
+        void genBasicBlock(BaseBlock *block);
+        void genInstruction(Instruction *instr);
+
+        void loadReg(Register reg, ::Value *val);
+        void storeReg(Register reg, ::Value *val);
+        void getPtr(Register reg, ::Value *val);
+        void readAtPtr(Register ptr, Register reg);
+        void writeAtPtr(Register ptr, Register reg);
+
+        int getFpOffset(::Value *val);
+
+        bool isImm(::Value *val);
+        int getImm(::Value *val);
+
+        MemType valueType(::Value *val);
+
+        void move(Register reg, int val);
+
+        std::string getGlobalVarLabel(::Value *val);
+
+        std::vector<LinePtr> getLines() { return lines; }
+        std::string name() const { return func->name; }
+
+        void printInfo();
 
     public:
-        std::string name;
-        std::vector<LinePtr> body;
+        Function *func;
+        std::vector<LinePtr> lines;
 
         std::vector<FuncBlockPtr> callees;
         std::vector<FuncBlockPtr> callers;
+
+        std::set<Register> available = AvailableRegs;
+        std::map<::Value*, Register> alloc;
+        std::map<Register, ::Value*> regMap;
+
+        std::map<BaseBlock*, std::shared_ptr<Label>> labelMap;
 
         AssemblyType asmType;
         int stackSize = 0;
         bool isLeaf = false;
         int align = 2;
+        int nSaveParams;
+        int nMaxSpillArgs;
+        int offsetSavedParam;
+        int offsetLocalData;
+        int offsetTempVar;
     };
 
     class AsmTranslator
@@ -122,11 +160,6 @@ namespace Assembly
         void genTargetPlatformInfo();
         void loadGlobalVals();
 
-        FuncBlockPtr genFuncBlock(Function *func);
-        void genBasicBlock(BasicBlock *block);
-
-        void genInstruction(AsmInstruction *instr);
-
     private:
         AssemblyType asmType = AssemblyType::Arm;
         int alignment = 2;
@@ -135,8 +168,6 @@ namespace Assembly
         bool rewriteSymbolName = true;
         bool useParsedImm8m = false;
         bool dynamicSpWithMultiCallee = false;
-
-        std::map<::Value*, int> regMapping;
         //std::map<std::string, std::vector<int>> globalData;
         
         std::vector<GlobalVal> globalValues;

@@ -60,7 +60,7 @@ public:
 
 public:
 	std::set<Value*> globalSet;
-	map<string, Value*>globalVar;
+	map<string, Value*> globalVar;
 	vector<Function*> funcList;
 	map<Value*, ConstantValue*> valueTable;
 	//map<Value*, int> addressTable;

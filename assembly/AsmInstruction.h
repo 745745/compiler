@@ -129,6 +129,7 @@ namespace Assembly
     };
 
     typedef Immediate<12, false> Imm12u;
+    typedef Immediate<12, true> Imm12;
 
     class Imm8m : public Value
     {
@@ -160,6 +161,7 @@ namespace Assembly
     public:
         enum { Fp = 7, Sp = 13, Lr = 14, Pc = 15 };
 
+        Register() : id(Pc) {}
         Register(int id);
         ValueType type() const { return ValueType::Reg; }
         std::string toString() const;
@@ -170,6 +172,23 @@ namespace Assembly
     private:
         int id;
     };
+
+    const Register R0(0);
+    const Register R1(1);
+    const Register R2(2);
+    const Register R3(3);
+    const Register R4(4);
+    const Register R5(5);
+    const Register R6(6);
+    const Register R7(7);
+    const Register R8(8);
+    const Register R9(9);
+    const Register R10(10);
+    const Register R11(11);
+    const Register R12(12);
+    const Register R13(13);
+    const Register R14(14);
+    const Register R15(15);
 
     class RegShift : public Value
     {
@@ -377,7 +396,9 @@ namespace Assembly
     public:
         enum class Type { Ldr = int(InstrType::Ldr), Str };
 
-        MonoMemInstr(Register rd, Register rn, Imm12u offset, Type type, AutoIncType inc = AutoIncType::None);
+        MonoMemInstr(Register rn, const std::string &label, Type type) :
+            rd(rn), rn(rn), offset(label), AsmInstruction(InstrType(type)) {}
+        MonoMemInstr(Register rd, Register rn, Imm12 offset, Type type, AutoIncType inc = AutoIncType::None);
         MonoMemInstr(Register rd, Register rn, RegShift offset, Type type, AutoIncType inc = AutoIncType::None);
         bool canSetFlags() const override { return false; }
         std::string toString() const override;
@@ -386,7 +407,7 @@ namespace Assembly
 
     private:
         Register rd, rn;
-        std::variant<Imm12u, RegShift> offset;
+        std::variant<Imm12, RegShift, std::string> offset;
         AutoIncType inc;
         bool sub;
     };

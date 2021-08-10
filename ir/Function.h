@@ -21,6 +21,8 @@ class Instruction;
 
 const int MaxParamsPassedByReg = 4;
 
+bool isPredefinedFunc(std::string name);
+
 static std::string getTypeType(Type *type)
 {
 	if (type->tName == typeName::arrayType)
@@ -74,6 +76,10 @@ public:
 
 	std::vector<BaseBlock*> getAllBlocks();
 	void linearizeInstrTrees();
+	void calcLocalDataSize();
+
+	vector<int>* getArrayParamDefine(string name);
+	void addArrayParamDefine(string name, vector<int> dim);
 
 	map<string, Value*> symbolTable;
 	map<string, Value*> recoverTable;
@@ -82,13 +88,17 @@ public:
 	std::map<Value*, std::string> revSymbolTable;
 
 	std::map<Value*, int> addressTable;
+	std::map<Value*, int> paramSet;
+	std::vector<Value*> localVars;
 
-	std::vector<Value*> params;
-	std::set<Value*> paramSet;
+	std::map<string, vector<int>> arrayDefine;
 
 	BaseBlock* entry;
 	BaseBlock* last;
 	Module* parent;
 
 	int nTempVars;
+	int nMaxCallParams;
+	int localDataSizeByByte;
+	int frameAddressByByte = 0;
 };

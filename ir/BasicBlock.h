@@ -34,11 +34,14 @@ public:
 	std::vector<Instruction*> insrList;
 	std::vector<BaseBlock*> pre_bbs_;
 	std::vector<BaseBlock*> succ_bbs_;
+	int idx;
+
 	void debugPrint();
 
 	BaseBlock():Value(voidType)
 	{
 		parent = nullptr;
+		blockType = Basic;
 	}
 };
 
